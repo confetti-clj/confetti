@@ -17,10 +17,10 @@ The gist of AWS' [Website Hosting Intro](http://docs.aws.amazon.com/gettingstart
 - [x] Create buckets
    - [x] example.com
    - [x] www.example.com
-   - [x] (optional) logs.example.com
-- [] Add bucket policy to root bucket
-- [] (optional) Enable logging for root bucket
-   - specify logs.example.com as target bucket
+   - [x] *optional* logs.example.com
+- [ ] Add bucket policy to root bucket
+- [ ] *optional* Enable logging for root bucket
+   - [ ] specify logs.example.com as target bucket
 - [x] Enable static website hosting
    - [x] **Index Document** index.html
    - [x] **Error Document** error.html
