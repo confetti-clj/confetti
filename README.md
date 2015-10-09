@@ -18,7 +18,7 @@ The gist of AWS' [Website Hosting Intro](http://docs.aws.amazon.com/gettingstart
    - [x] example.com
    - [x] www.example.com
    - [x] *optional* logs.example.com
-- [ ] Add bucket policy to root bucket
+- [x] Add bucket policy to root bucket
 - [ ] *optional* Enable logging for root bucket
    - [ ] specify logs.example.com as target bucket
 - [x] Enable static website hosting
@@ -28,12 +28,12 @@ The gist of AWS' [Website Hosting Intro](http://docs.aws.amazon.com/gettingstart
 
 ### Route 53
 
-1. Create a hosted zone for domain
-2. Create two record sets for hosted zone
+- [x] Create a hosted zone for domain
+- [x] Create two record sets for hosted zone
    - for root domain
      - Type: A - IPv4 address
      - Alias: Yes
-     - Alias Target: S3 root website endpoint
+     - Alias Target: S3 root website endpoint; [Hosted Zone Ids](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
      - Routing Policy: Simple
      - Evaluate Target Health: No
    - for the www subdomain
