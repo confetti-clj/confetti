@@ -75,10 +75,10 @@
     (let [etag (or etag (:etag (cf/get-distribution-config :id id)))]
       (cf/delete-distribution :id id :if-match etag))))
 
-(-create! (->CloudfrontDistribution "x") {})
-(-destroy! (map->CloudfrontDistribution {:id "EZ7XTYQOBI10S", :etag "E2UR1R4QSNBJ6Y"}))
-(-update-config! (->CloudfrontDistribution "E18XE3JAJZHS4G") #(assoc % :enabled false))
-(-destroy! (->CloudfrontDistribution "E18XE3JAJZHS4G"))
+;; (-create! (->CloudfrontDistribution "x") {})
+;; (-destroy! (map->CloudfrontDistribution {:id "EZ7XTYQOBI10S", :etag "E2UR1R4QSNBJ6Y"}))
+;; (-update-config! (->CloudfrontDistribution "E18XE3JAJZHS4G") #(assoc % :enabled false))
+;; (-destroy! (->CloudfrontDistribution "E18XE3JAJZHS4G"))
 
 ;; (defn mk-bucket
 ;;   [name opts]

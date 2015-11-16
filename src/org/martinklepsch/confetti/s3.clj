@@ -22,17 +22,7 @@
                 :Action ["s3:GetObject"]
                 :Resource [(str "arn:aws:s3:::" bucket-name "/*")]}]})
 
-(def root-domain "cljs.io")
-
-;; Validation
-(defn buckets-available? [cred & buckets]
-  ;; (pprint (map #(s3/does-bucket-exist cred %) buckets))
-  (not-any? true? (map #(s3/does-bucket-exist cred %) buckets)))
-
-(defn username-available? [cred name]
-  (not ((set (map :user-name (:users (iam/list-users cred)))) name)))
-
-;; S3 ===========================================================================
+(bucket-policy "static-site-cljs-io-sitebucket-1969npf1zvwoh")
 
 (defn enable-website
   "Enable website hosting for given bucket"
@@ -53,16 +43,22 @@
 
 (defn create-buckets
   "Create all required S3 buckets"
-  [cred root-domain {:keys [logging?]}]
-  (let [www-domain (str "www." root-domain)
-        log-domain (str "logs." root-domain)]
-    (assert (buckets-available? cred root-domain www-domain)
-            "Buckets not available")
-    (s3/create-bucket cred root-domain)
-    (s3/create-bucket cred www-domain)
-    (if logging? (s3/create-bucket cred log-domain))
-    (enable-static-website-hosting cred root-domain)
-    (redirect-bucket-traffic cred www-domain (website-endpoint cred root-domain))))
+  ([cred root-domain]
+   (create-buckets cred root-domain {}))
+  ([cred root-domain {:keys [logging?]}]
+   (let [www-domain (str "www." root-domain)
+         log-domain (str "logs." root-domain)]
+     ;; (assert (buckets-available? cred root-domain www-domain)
+     ;;         "Buckets not available")
+     (s3/create-bucket cred root-domain)
+     (s3/create-bucket cred www-domain)
+     (if logging? (s3/create-bucket cred log-domain))
+     (enable-website cred root-domain {:index "index.html"})
+     (enable-website cred www-domain {:redirect (website-endpoint cred root-domain)}))))
+
+(defn buckets-available? [cred & buckets]
+  (log/error (map #(s3/does-bucket-exist cred %) buckets))
+  (not-any? true? (map #(s3/does-bucket-exist cred %) buckets)))
 
 (defn delete-buckets
   "Delete given buckets"

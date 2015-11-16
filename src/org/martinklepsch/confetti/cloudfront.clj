@@ -21,14 +21,15 @@
    :min-ttl 0,
    :trusted-signers {:enabled false, :items [], :quantity 0}})
 
-(defn create-distribution [root-domain]
+(defn create-distribution [cred root-domain]
   (let [oid (str "confetti-" root-domain)]
     (cf/create-distribution
+     cred
      :distribution-config
      {:enabled true
       :comment (str "Created by Confetti for project: " root-domain)
       :default-cache-behavior (cache-behavior oid) 
-      :origins {:items [(cloudfront-origin oid "www.patalyze.co.s3.amazonaws.com")]
+      :origins {:items [(cloudfront-origin oid (str root-domain ".co.s3.amazonaws.com"))]
                 :quantity 1}
       :aliases {:items [(str "www." root-domain) root-domain], :quantity 2}
       :caller-reference (str (java.util.UUID/randomUUID))})))

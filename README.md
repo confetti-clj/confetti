@@ -36,6 +36,7 @@ relevant discussion about cloudformation: https://groups.google.com/forum/#!topi
 
 - One bucket is enough (www. can be handled via CloudFront)
 - Website hosting does not need to be enabled (handled via CloudFront)
+  **potentially wrong:** (untested) https://forums.aws.amazon.com/message.jspa?messageID=681707
 - Logging can be handled at S3 as well as CloudFront level
 https://forums.aws.amazon.com/message.jspa?messageID=681413#681413
 
@@ -84,6 +85,8 @@ https://forums.aws.amazon.com/message.jspa?messageID=681413#681413
 
 - Free certificates available via letsencrypt.org
 - Cloudfront lets you add custom certs at no charge (http://aws.amazon.com/de/about-aws/whats-new/2014/03/05/amazon-cloudront-announces-sni-custom-ssl/)
+- Ruby ACME client https://lolware.net/2015/10/27/letsencrypt_go_live.html
+- Java https://community.letsencrypt.org/t/third-party-library-java-client/633
 
 # Website configuration required when using Cloudfront?
 
