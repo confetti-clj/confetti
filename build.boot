@@ -2,6 +2,7 @@
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]
                  [amazonica/amazonica "0.3.33"]
+                 [camel-snake-kebab "0.3.2"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]])
                  
