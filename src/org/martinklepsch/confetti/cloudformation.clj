@@ -1,10 +1,10 @@
 (ns org.martinklepsch.confetti.cloudformation
-  (:require [clojure.java.io :as io]
+  (:require [org.martinklepsch.confetti.policies :as pol]
+            [clojure.data.json :as json]
+            [clojure.java.io :as io]
             [camel-snake-kebab.core :as case]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [clojure.data.json :as json]
             [amazonica.aws.s3 :as s3]
-            [org.martinklepsch.confetti.policies :as pol]
             [amazonica.aws.route53 :as r53]
             [amazonica.aws.cloudformation :as cformation]))
 
