@@ -101,17 +101,40 @@
               dns? (assoc :hosted-zone-id {:value (ref :hosted-zone)
                                            :description "ID of HostedZone"}))})
 
+(defn map->cf-params [m]
+  (-> (fn [p [k v]]
+        (conj p {:parameter-key (case/->PascalCaseString k)
+                 :parameter-value v}))
+      (reduce [] m)))
+
+(defn run-template [stack-name template params]
+  (let [tplate (json/write-str (transform-keys case/->PascalCaseString template))]
+    (cformation/create-stack
+     :stack-name stack-name
+     :template-body tplate
+     :capabilities ["CAPABILITY_IAM"]
+     :parameters (map->cf-params params))))
+
+(defn get-events [stack-id]
+  (:stack-events (cformation/describe-stack-events {:stack-name stack-id})))
+
+(defn succeeded? [events]
+  (->> events
+       (filter #(= (:resource-status %) "CREATE_COMPLETE"))
+       (filter #(= (:resource-type %) "AWS::CloudFormation::Stack"))
+       seq
+       boolean))
 
 (comment
+  (finished? (get-events "arn:aws:cloudformation:us-east-1:297681564547:stack/static-site-xyz/5aa62560-8f03-11e5-a56f-50e24162947c"))
+
+  (run-template "static-site-xyz"
+                (template {:dns? false})
+                {:user-domain "tenzing.martinklepsch.org"})
+
   (s3/put-object :bucket-name "static-site-cljs-io-sitebucket-1969npf1zvwoh"
                  :key "index.html"
                  :file (io/file "index.html"))
-
-  (let [stack "static-site-cljs-io"
-        tplate (json/write-str (transform-keys case/->PascalCaseString (template)))]
-    (cformation/create-stack
-     :stack-name stack :template-body tplate :capabilities ["CAPABILITY_IAM"]
-     :parameters [{:parameter-key "UserDomain" :parameter-value "confetti.martinklepsch.org"}]))
 
   (cformation/delete-stack :stack-name "static-site-cljs-io")
 
