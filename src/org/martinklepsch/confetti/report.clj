@@ -1,4 +1,4 @@
-(ns org.martinklepsch.confetti
+(ns org.martinklepsch.confetti.report
   (:require [org.martinklepsch.confetti.cloudformation :as cf]
             [org.martinklepsch.confetti.util :as util]
             [camel-snake-kebab.core :as case]
@@ -17,7 +17,7 @@
   (fn [reported]
     (let [
           ;;events (get-events-stub stack-id)
-          events (cf/get-events stack-id)
+          events (sort-by :timestamp (cf/get-events stack-id))
           ]
       ;; (let [r (rand)]
       ;;   (when (> 0.2 r)
@@ -26,10 +26,10 @@
       (doseq [ev events]
         (when-not (reported ev)
           (report-cb ev)))
-      (if (cf/succeeded? events)
-        (do (println "succeeded")
-            (deliver done-promise true))
-        (println "not succeeded"))
+      (when (cf/succeeded? events)
+        (deliver done-promise :success))
+      (when (cf/failed? events)
+        (deliver done-promise :failure))
       (reduce conj reported events))))
 
 (defn report-stack-events
@@ -39,8 +39,9 @@
         report (mk-reporter (assoc args :done-promise done))
         sched  (util/schedule #(send-off reported report) 300)]
     ;; TODO if success? -> error handling!
-    (when @done
-      (future-cancel sched))))
+    (case @done
+      :success (future-cancel sched)
+      :failure (future-cancel sched))))
 
 (comment
   (do

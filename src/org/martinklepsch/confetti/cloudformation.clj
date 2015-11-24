@@ -119,6 +119,13 @@
 (defn get-events [stack-id]
   (:stack-events (cformation/describe-stack-events {:stack-name stack-id})))
 
+(defn get-outputs [stack-id]
+  (let [sanitize #(for [o %]
+                   [(case/->kebab-case-keyword (:output-key o))
+                    (dissoc o :output-key)])]
+    (->> (cformation/describe-stacks {:stack-name stack-id})
+        :stacks first :outputs sanitize (into {}))))
+
 (defn succeeded? [events]
   (->> events
        (filter #(= (:resource-status %) "CREATE_COMPLETE"))
@@ -126,8 +133,17 @@
        seq
        boolean))
 
+(defn failed? [events]
+  (->> events
+       (filter #(= (:resource-status %) "ROLLBACK_COMPLETE"))
+       (filter #(= (:resource-type %) "AWS::CloudFormation::Stack"))
+       seq
+       boolean))
+
 (comment
-  (finished? (get-events "arn:aws:cloudformation:us-east-1:297681564547:stack/static-site-xyz/5aa62560-8f03-11e5-a56f-50e24162947c"))
+  (get-outputs "arn:aws:cloudformation:us-east-1:297681564547:stack/subsdufysb-martinklepsch-org-confetti-static-site/62436cc0-9290-11e5-9caa-5001b4b81a9a")
+
+  (succeeded? (get-events "arn:aws:cloudformation:us-east-1:297681564547:stack/static-site-xyz/5aa62560-8f03-11e5-a56f-50e24162947c"))
 
   (run-template "static-site-xyz"
                 (template {:dns? false})
