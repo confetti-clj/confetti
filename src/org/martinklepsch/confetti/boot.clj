@@ -1,6 +1,7 @@
 (ns org.martinklepsch.confetti.boot
   {:boot/export-tasks true}
   (:require [org.martinklepsch.confetti.report :as rep]
+            [org.martinklepsch.confetti.util :as util]
             [org.martinklepsch.confetti.cloudformation :as cf]
             [camel-snake-kebab.core :as case]
             [clojure.string :as string]
@@ -31,13 +32,21 @@
       (println "->" (:output-value o)))))
 
 (b/deftask confetti
-  "Create all resources for ideal deployment of static sites and SPAs"
+  "Create all resources for ideal deployment of static sites and Single Page Apps.
+
+   The domain your site should be reached under should be passed via the `domain`
+   option.
+
+   If you are supplying a root/APEX domain enabling the DNS management via Route53
+   is required (more information in the README)."
   [n dns           bool "Handle DNS? (i.e. create Route53 Hosted Zone)"
    v verbose       bool "Print all events in full during creation"
    d domain DOMAIN str  "Domain of the future site (without protocol)"
    r dry-run       bool "Only print to be ran template, don't run it"]
   (b/with-pre-wrap fs
     (assert domain "Domain is required!")
+    (when (util/root-domain? "hi.abc.com")
+      (assert dns "Root domain setups must use Route53 for DNS"))
     (let [tpl (cf/template {:dns? dns})
           stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
           ran (when-not dry-run
@@ -54,3 +63,9 @@
                             (if verbose (pp/pprint %)))})
           (print-outputs (:stack-id ran))))
       fs)))
+
+;; ---
+
+(comment
+
+)

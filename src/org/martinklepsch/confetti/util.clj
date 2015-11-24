@@ -1,12 +1,28 @@
 (ns org.martinklepsch.confetti.util
-  (:import [java.util.concurrent Executors TimeUnit]))
+  (:require [clojure.string :as string])
+  (:import [java.util.concurrent Executors TimeUnit]
+           [com.google.common.net InternetDomainName]))
+
+;; Scheduling used for reporting -----------------------------------------------
 
 (def scheduler (Executors/newScheduledThreadPool 1))
 
-(defn schedule [fn interval-seconds]
-  (.scheduleAtFixedRate scheduler fn 0 interval-seconds TimeUnit/MILLISECONDS))
+(defn schedule [fn interval-ms]
+  (.scheduleAtFixedRate scheduler fn 0 interval-ms TimeUnit/MILLISECONDS))
+
+;; Root domain identification --------------------------------------------------
+
+(defn root-domain? [domain]
+  (let [suffix (.. (InternetDomainName/from domain) publicSuffix toString)
+        ptn    (re-pattern (str "\\." suffix "$"))
+        wo-tld (string/replace domain ptn "")]
+    (= 0 (count (filter #(= \. %) wo-tld)))))
 
 (comment
+   (root-domain? "abc.co.uk")
+   (root-domain? "hi.abc.co.uk")
+   (root-domain? "bac.com")
+
   (def fut (schedule (fn [] (println (System/currentTimeMillis))) 3))
   ;; Test exception handling
   (def fx (let [s (atom 0)

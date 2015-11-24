@@ -4,8 +4,7 @@
             [camel-snake-kebab.core :as case]
             [clojure.pprint :as pp]
             [clojure.data.json :as json]
-            [clojure.stacktrace :as strace]
-            [clojure.tools.logging :as log]))
+            [clojure.stacktrace :as strace]))
 
 (def reported (agent #{} :error-handler (fn [a e]
                                           (set-error-mode! a :fail)
