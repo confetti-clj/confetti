@@ -1,4 +1,5 @@
 (ns org.martinklepsch.confetti.cloudformation
+  (:refer-clojure :exclude [ref])
   (:require [org.martinklepsch.confetti.policies :as pol]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
