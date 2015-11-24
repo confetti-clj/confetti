@@ -2,63 +2,81 @@
   (:require [org.martinklepsch.confetti.cloudformation :as cf]
             [org.martinklepsch.confetti.util :as util]
             [camel-snake-kebab.core :as case]
-            [clojure.pprint :refer [pprint]]
+            [clojure.pprint :as pp]
             [clojure.data.json :as json]
+            [clojure.stacktrace :as strace]
             [clojure.tools.logging :as log]))
 
-;; TODO make sure future is retrieved/deref'd at some point to make any exceptions bubble up
-;; The stuff below might not be needed anymore if this works properly
-(Thread/setDefaultUncaughtExceptionHandler
- (reify Thread$UncaughtExceptionHandler
-   (uncaughtException [_ thread ex]
-     (println ex "Uncaught exception on" (.getName thread)))))
+(def reported (agent #{} :error-handler (fn [a e]
+                                          (set-error-mode! a :fail)
+                                          (strace/print-stack-trace e))))
 
-(defmulti print-event (comp case/->kebab-case-keyword :resource-status))
+(defn mk-reporter
+  [{:keys [stack-id report-cb done-promise]}]
+  {:pre  [stack-id report-cb done-promise]}
+  (fn [reported]
+    (let [
+          ;;events (get-events-stub stack-id)
+          events (cf/get-events stack-id)
+          ]
+      ;; (let [r (rand)]
+      ;;   (when (> 0.2 r)
+      ;;     (println "throwing!" r)
+      ;;     (throw (ex-info "Fabricated exception" {}))))
+      (doseq [ev events]
+        (when-not (reported ev)
+          (report-cb ev)))
+      (if (cf/succeeded? events)
+        (do (println "succeeded")
+            (deliver done-promise true))
+        (println "not succeeded"))
+      (reduce conj reported events))))
 
-(defmethod print-event :default [ev]
-  (println "DEFAULT EVENT PRINTER")
-  (println ev))
-
-(defmethod print-event :create-complete [ev]
-  ;; (printf "[%s] %s\n" (:resource-status ev) (:resource-type ev))
-  (println "[" (:resource-status ev) "]" (:resource-type ev)))
-
-(defmethod print-event :create-in-progress [ev]
-  ;; `printf` behaves strange in non main threads??
-  ;; (println (System/currentTimeMillis))
-  (println "[" (:resource-status ev) "]" (:resource-type ev)))
-
-(def stack-events (atom {}))
-
-(defn report-events
-  ([stack-id done-promise]
-   (report-events stack-id done-promise false))
-  ([stack-id done-promise verbose?]
-   (let [;;events (cf/get-events stack-id)
-         events (get-events-stub stack-id)
-         new    (reduce
-                 (fn [m {:keys [event-id] :as ev}]
-                   (if (get m event-id)
-                     m
-                     (do
-                       (print-event ev)
-                       (when verbose? (println ev))
-                       (assoc m event-id ev))))
-                 @stack-events
-                 events)]
-     (reset! stack-events new)
-     (when (cf/succeeded? events)
-       (deliver done-promise true)))))
-
-(defn report-stack-events [stack-id opts]
-  (let [done  (promise)
-        report #(report-events stack-id done true)
-        sched  (util/schedule report 300)]
+(defn report-stack-events
+  [{:keys [stack-id report-cb] :as args}]
+  {:pre  [stack-id report-cb]}
+  (let [done   (promise)
+        report (mk-reporter (assoc args :done-promise done))
+        sched  (util/schedule #(send-off reported report) 300)]
     ;; TODO if success? -> error handling!
     (when @done
       (future-cancel sched))))
 
 (comment
+  (do
+    (reset! evs [])
+    (if (agent-error reported)
+      (restart-agent reported #{})
+      (send reported (fn [_] #{})))
+    (future (loop [i 0]
+              (Thread/sleep 300)
+              (add-event evs)
+              (when (< i 10)
+                (recur (inc i)))))
+    (report-stack-events {:stack-id "x"
+                          :report-cb pp/pprint}))
+
+  (do ;; Events testing
+    (def evs (atom []))
+
+    (defn get-events-stub [_]
+      (deref evs))
+
+      ;; (println "get-events-stub")
+    (defn add-event [evs-atom]
+      (println "adding event")
+      ;; (when (< 0.3 (rand))
+      ;;   (println throwing)
+      ;;   (throw (ex-info "Fabricated exception" {})))
+      (swap! evs-atom conj
+             (if (< (count @evs-atom) 10)
+               {:event-id (gensym) :resource-status "CREATE_IN_PROGRESS" :resource-type "AWS::S3::Bucket" :fake-event "yes"}
+               {:event-id (gensym) :resource-status "CREATE_COMPLETE" :resource-type "AWS::CloudFormation::Stack"}))))
+
+  (def p   (promise))
+  (def fut (util/schedule #(send-off reported report) 2000))
+  ;; (def fut (util/schedule (fn [] (println "x")) 2))
+
   (defn rand-str []
     (->> (fn [] (rand-nth ["a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k"]))
          repeatedly
@@ -72,25 +90,5 @@
              {:user-domain (str s ".martinklepsch.org")})]
     (println ran)
     (report-stack-events (:stack-id ran)))
-
-  (do
-    (reset! evs [])
-    (reset! stack-events {})
-    (report-stack-events "x" {}))
-
-  (do ;; Events testing
-    (def evs (atom []))
-
-    (defn get-events-stub [_]
-      (Thread/sleep 300)
-      (swap! evs conj
-             (if (< (count @evs) 10)
-               {:event-id (gensym) :resource-status "CREATE_IN_PROGRESS" :resource-type "AWS::S3::Bucket" :fake-event "yes"}
-               {:event-id (gensym) :resource-status "CREATE_COMPLETE" :resource-type "AWS::CloudFormation::Stack"}))))
-
-  (def p   (promise))
-  (def ea  (events-reporter "x" p))
-  (def fut (util/schedule ea 2))
-  (def fut (util/schedule (fn [] (println "x")) 2))
 
   )
