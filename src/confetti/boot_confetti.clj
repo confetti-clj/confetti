@@ -1,8 +1,9 @@
-(ns org.martinklepsch.confetti.boot
+(ns confetti.boot-confetti
   {:boot/export-tasks true}
-  (:require [org.martinklepsch.confetti.report :as rep]
-            [org.martinklepsch.confetti.util :as util]
-            [org.martinklepsch.confetti.cloudformation :as cf]
+  (:require [confetti.report :as rep]
+            [confetti.util :as util]
+            [confetti.cloudformation :as cf]
+            [confetti.s3-deploy :as s3d]
             [camel-snake-kebab.core :as case]
             [clojure.string :as string]
             [clojure.pprint :as pp]
@@ -31,7 +32,7 @@
       (println (ansi/bold (:description o)))
       (println "->" (:output-value o)))))
 
-(b/deftask confetti
+(b/deftask create-site
   "Create all resources for ideal deployment of static sites and Single Page Apps.
 
    The domain your site should be reached under should be passed via the `domain`
@@ -63,6 +64,32 @@
                             (if verbose (pp/pprint %)))})
           (print-outputs (:stack-id ran))))
       fs)))
+
+(defn ^:private fileset->file-map [fs]
+  (into {} (for [[p tf] (:tree fs)]
+             [p (b/tmp-file tf)])))
+
+(defn serialize-file-map [fm]
+  (into {} (for [[p f] fm] [p (.getCanonicalPath f)])))
+
+(b/deftask sync-bucket
+  "Sync fileset or directory to S3 bucket."
+  [b bucket BUCKET str      "Name of S3 bucket to push files to"
+   c creds K=W     {kw str} "Credentials to use for pushing to S3"
+   p prefix PREFIX str      "String to strip from paths in fileset/dir"
+   d dir DIR       str      "Directory to sync"
+   _ prune         bool     "Delete files from S3 bucket not in fileset/dir"
+   r report-fn FN  code     "Call this function with reporting events"]
+  (b/with-pre-wrap fs
+    (assert bucket "a bucket name is required!")
+    (assert creds "credentials are required!")
+    (let [file-map (fileset->file-map fs)]
+      (s3d/sync! bucket file-map {:dry-run? true
+                                  :prune? true
+                                  ;;:report-fn (fn [t d] (println t (:s3-key d)))
+                                  })
+      #_(pp/pprint (take 3 (serialize-file-map file-map))))
+    fs))
 
 ;; ---
 

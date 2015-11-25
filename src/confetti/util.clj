@@ -1,4 +1,4 @@
-(ns org.martinklepsch.confetti.util
+(ns confetti.util
   (:require [clojure.string :as string])
   (:import [java.util.concurrent Executors TimeUnit]
            [com.google.common.net InternetDomainName]))

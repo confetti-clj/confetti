@@ -1,6 +1,6 @@
-(ns org.martinklepsch.confetti.report
-  (:require [org.martinklepsch.confetti.cloudformation :as cf]
-            [org.martinklepsch.confetti.util :as util]
+(ns confetti.report
+  (:require [confetti.cloudformation :as cf]
+            [confetti.util :as util]
             [camel-snake-kebab.core :as case]
             [clojure.pprint :as pp]
             [clojure.data.json :as json]
