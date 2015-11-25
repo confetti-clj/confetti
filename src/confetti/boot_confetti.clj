@@ -78,16 +78,15 @@
    c creds K=W     {kw str} "Credentials to use for pushing to S3"
    p prefix PREFIX str      "String to strip from paths in fileset/dir"
    d dir DIR       str      "Directory to sync"
-   _ prune         bool     "Delete files from S3 bucket not in fileset/dir"
-   r report-fn FN  code     "Call this function with reporting events"]
+   y dry-run       bool     "Call report-fn as usual but don't actually do anything"
+   _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "a bucket name is required!")
     (assert creds "credentials are required!")
     (let [file-map (fileset->file-map fs)]
-      (s3d/sync! bucket file-map {:dry-run? true
+      (s3d/sync! bucket file-map {:dry-run? dry-run
                                   :prune? true
-                                  ;;:report-fn (fn [t d] (println t (:s3-key d)))
-                                  })
+                                  :report-fn (fn [t d] (println t (:s3-key d)))})
       #_(pp/pprint (take 3 (serialize-file-map file-map))))
     fs))
 

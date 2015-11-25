@@ -1,3 +1,5 @@
+![confetti-logo](https://cloud.githubusercontent.com/assets/97496/11410396/5d608a84-93c7-11e5-9a8f-8661127a98a9.png)
+
 # confetti (alpha)
 
 A tool to help authoring static sites with AWS.
@@ -26,7 +28,7 @@ boot confetti --help
 An example to create a new stack:
 
 ```
-boot confetti --domain "hello.martinklepsch.org"
+boot create-site --domain "hello.martinklepsch.org"
 ```
 
 ### APEX Domains

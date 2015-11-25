@@ -14,14 +14,7 @@
   [{:keys [stack-id report-cb done-promise]}]
   {:pre  [stack-id report-cb done-promise]}
   (fn [reported]
-    (let [
-          ;;events (get-events-stub stack-id)
-          events (sort-by :timestamp (cf/get-events stack-id))
-          ]
-      ;; (let [r (rand)]
-      ;;   (when (> 0.2 r)
-      ;;     (println "throwing!" r)
-      ;;     (throw (ex-info "Fabricated exception" {}))))
+    (let [events (sort-by :timestamp (cf/get-events stack-id))]
       (doseq [ev events]
         (when-not (reported ev)
           (report-cb ev)))
