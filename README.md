@@ -22,14 +22,19 @@ A tool to help authoring static sites with AWS.
 To get help on the command line you can run:
 
 ```
-boot confetti --help
+boot create-site --help
+boot sync-bucket --help
 ```
 
 An example to create a new stack:
-
 ```
 boot create-site --domain "hello.martinklepsch.org"
 ```
+An example to sync an S3 bucket:
+```
+boot sync-bucket --bucket "hello.martinklepsch.org"
+```
+**NOTE**: Both tasks require a `creds` option containing authorized AWS keys.
 
 ### APEX Domains
 
@@ -43,7 +48,7 @@ root domains without also managing DNS with Route53.
 
 ### Edge cases
 
-- subdomain setup with DNS but Zone for root domain exists   
+- subdomain setup with DNS but Zone for root domain exists
   *Should work fine for cost optimization these zones could be merged however.*
 
 ### SSL
