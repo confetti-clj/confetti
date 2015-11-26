@@ -1,35 +1,37 @@
 (ns confetti.boot-confetti
   {:boot/export-tasks true}
-  (:require [confetti.report :as rep]
-            [confetti.util :as util]
-            [confetti.cloudformation :as cf]
-            [confetti.s3-deploy :as s3d]
-            [camel-snake-kebab.core :as case]
+  (:require [confetti.s3-deploy :as s3d]
+            [confetti.report]
             [clojure.string :as string]
             [clojure.pprint :as pp]
-            [boot.from.io.aviso.ansi :as ansi]
+            [boot.pod :as pod]
             [boot.util :as u]
             [boot.core :as b]))
 
-(def colors {:create-complete ansi/green
-             :create-in-progress ansi/yellow
-             :create-failed ansi/red
-             :rollback-in-progress ansi/yellow
-             :delete-complete ansi/green
-             :delete-in-progress ansi/yellow
-             :rollback-complete ansi/green})
+(def deps '[[camel-snake-kebab "0.3.2"]
+            ;; Should be used in pods
+            [confetti/cloudformation "0.1.0-SNAPSHOT"]
+            [confetti/s3-deploy "0.1.0-SNAPSHOT"]
+            ;; Ahem...
+            [com.google.guava/guava "18.0"]])
 
-(defn print-ev [ev]
-  (let [type  (-> ev :resource-status case/->kebab-case-keyword)
-        color (get colors type identity)]
-    (println " -" (color (str "[" (name type) "]")) (:resource-type ev)
-             (if-let [r (:resource-status-reason ev)] (str "- " r) ""))))
+(defn confetti-pod []
+  (pod/make-pod (update-in (b/get-env) [:dependencies] into deps)))
+
+(def cpod (confetti-pod))
+
+;; (let [verbose true]
+;;   (pod/with-call-in cpod
+;;     (confetti.report/report-stack-events
+;;      {:stack-id (:stack-id ran)
+;;       :report-cb confetti.util/print-ev})))
 
 (defn print-outputs [stack-id]
-  (let [outs (cf/get-outputs stack-id)]
+  (let [outs (pod/with-call-in cpod
+               (boot.cloudformation/get-outputs stack-id))]
     (doseq [[k o] outs]
       (newline)
-      (println (ansi/bold (:description o)))
+      (u/info (:description o))
       (println "->" (:output-value o)))))
 
 (b/deftask create-site
@@ -41,27 +43,32 @@
    If you are supplying a root/APEX domain enabling the DNS management via Route53
    is required (more information in the README)."
   [n dns           bool "Handle DNS? (i.e. create Route53 Hosted Zone)"
+   c creds K=W     {kw str} "Credentials to use for creating CloudFormation stack"
    v verbose       bool "Print all events in full during creation"
    d domain DOMAIN str  "Domain of the future site (without protocol)"
    r dry-run       bool "Only print to be ran template, don't run it"]
   (b/with-pre-wrap fs
+    (assert creds "Credentials are required!")
     (assert domain "Domain is required!")
-    (when (util/root-domain? "hi.abc.com")
+    (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
       (assert dns "Root domain setups must use Route53 for DNS"))
-    (let [tpl (cf/template {:dns? dns})
+    (let [tpl (pod/with-call-in cpod
+                (confetti.cloudformation/template ~creds {:dns? dns}))
           stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
           ran (when-not dry-run
-                (cf/run-template stn tpl {:user-domain domain}))]
+                (pod/with-call-in cpod
+                  (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
       (if dry-run
         (pp/pprint tpl)
         (do
-          (println (ansi/bold "Reporting stack-creation events for stack:"))
+          (u/info "Reporting stack-creation events for stack:\n")
           (println (:stack-id ran))
           (newline)
-          (rep/report-stack-events
+          (confetti.report/report-stack-events
+           ~creds
            {:stack-id (:stack-id ran)
-            :report-cb #(do (print-ev %)
-                            (if verbose (pp/pprint %)))})
+            :verbose verbose
+            :report-cb confetti.report/cf-report})
           (print-outputs (:stack-id ran))))
       fs)))
 
@@ -76,18 +83,19 @@
   "Sync fileset or directory to S3 bucket."
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
    c creds K=W     {kw str} "Credentials to use for pushing to S3"
-   p prefix PREFIX str      "String to strip from paths in fileset/dir"
-   d dir DIR       str      "Directory to sync"
-   y dry-run       bool     "Call report-fn as usual but don't actually do anything"
+   p prefix PREFIX str      "[not implemented] String to strip from paths in fileset/dir"
+   d dir DIR       str      "[not implemented] Directory to sync"
+   y dry-run       bool     "Report as usual but don't actually do anything"
    _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
-    (assert bucket "a bucket name is required!")
-    (assert creds "credentials are required!")
+    (assert bucket "A bucket name is required!")
+    (assert creds "Credentials are required!")
+    (newline)
     (let [file-map (fileset->file-map fs)]
-      (s3d/sync! bucket file-map {:dry-run? dry-run
-                                  :prune? true
-                                  :report-fn (fn [t d] (println t (:s3-key d)))})
-      #_(pp/pprint (take 3 (serialize-file-map file-map))))
+      (confetti.s3-deploy/sync!
+       creds bucket file-map
+       {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report}))
+    (newline)
     fs))
 
 ;; ---

@@ -1,10 +1,23 @@
 (ns confetti.report
-  (:require [confetti.cloudformation :as cf]
-            [confetti.util :as util]
+  (:require [boot.from.io.aviso.ansi :as ansi]
             [camel-snake-kebab.core :as case]
+            [confetti.cloudformation :as cf]
+            [confetti.util :as util]
             [clojure.pprint :as pp]
-            [clojure.data.json :as json]
             [clojure.stacktrace :as strace]))
+
+;; Reporting S3 ----------------------------------------------------------------
+
+(def s3-colors {:confetti.s3-deploy/added ansi/green
+                :confetti.s3-deploy/changed ansi/yellow
+                :confetti.s3-deploy/removed ansi/red})
+
+(defn s3-report [{:keys [type s3-key]}]
+  (let [color (get s3-colors type)]
+    (println " -" (color (str "[" (name type) "]")) s3-key)))
+
+
+;; Reporting Cloudformation ----------------------------------------------------
 
 (def reported (agent #{} :error-handler (fn [a e]
                                           (set-error-mode! a :fail)
@@ -34,6 +47,20 @@
     (case @done
       :success (future-cancel sched)
       :failure (future-cancel sched))))
+
+(def cf-colors {:create-complete ansi/green
+             :create-in-progress ansi/yellow
+             :create-failed ansi/red
+             :rollback-in-progress ansi/yellow
+             :delete-complete ansi/green
+             :delete-in-progress ansi/yellow
+             :rollback-complete ansi/green})
+
+(defn cf-report [ev]
+  (let [type  (-> ev :resource-status case/->kebab-case-keyword)
+        color (get cf-colors type identity)]
+    (println " -" (color (str "[" (name type) "]")) (:resource-type ev)
+             (if-let [r (:resource-status-reason ev)] (str "- " r) ""))))
 
 (comment
   (do
