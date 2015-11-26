@@ -1,4 +1,4 @@
-![confetti-logo](https://cloud.githubusercontent.com/assets/97496/11410396/5d608a84-93c7-11e5-9a8f-8661127a98a9.png)
+<img src="https://cloud.githubusercontent.com/assets/97496/11431604/00be4548-949c-11e5-8105-8f4405931f99.png" alt="Confetti Logo" align="right" />
 
 # confetti (alpha)
 
