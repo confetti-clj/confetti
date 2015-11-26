@@ -1,8 +1,6 @@
-<img src="https://cloud.githubusercontent.com/assets/97496/11431604/00be4548-949c-11e5-8105-8f4405931f99.png" alt="Confetti Logo" align="right" />
+![confetti-logo-small](https://cloud.githubusercontent.com/assets/97496/11431670/0ef1bb58-949d-11e5-83f7-d07cf1dd89c7.png)
 
-# confetti (alpha)
-
-A tool to help authoring static sites with AWS.
+**(alpha)** A tool to help authoring static sites with AWS.
 
 ## Features
 
