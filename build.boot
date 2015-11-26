@@ -15,6 +15,9 @@
 (bootlaces! +version+)
 
 (task-options!
+ push {:ensure-clean false}
  pom {:project     'confetti/confetti
       :version     +version+
-      :description "Create AWS resources for static site and single page app deployments"})
+      :description "Create AWS resources for static site and single page app deployments"
+      :url         "https://github.com/confetti/confetti"
+      :scm         {:url "https://github.com/confetti/confetti"}})
