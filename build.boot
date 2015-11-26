@@ -8,7 +8,7 @@
                  ;; Ahem...
                  [com.google.guava/guava "18.0"]])
 
-(require '[adzerk.bootlaces :refer [bootlaces! build-jar]]
+(require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
          '[confetti.boot-confetti :refer [create-site sync-bucket]])
 
 (def +version+ "0.1.0-SNAPSHOT")
