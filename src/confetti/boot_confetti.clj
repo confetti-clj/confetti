@@ -28,7 +28,7 @@
 
 (defn print-outputs [cred stack-id]
   (let [outs (pod/with-call-in cpod
-               (boot.cloudformation/get-outputs ~cred stack-id))]
+               (confetti.cloudformation/get-outputs ~cred stack-id))]
     (doseq [[k o] outs]
       (newline)
       (u/info (:description o))
