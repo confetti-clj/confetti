@@ -26,9 +26,9 @@
 ;;      {:stack-id (:stack-id ran)
 ;;       :report-cb confetti.util/print-ev})))
 
-(defn print-outputs [stack-id]
+(defn print-outputs [cred stack-id]
   (let [outs (pod/with-call-in cpod
-               (boot.cloudformation/get-outputs stack-id))]
+               (boot.cloudformation/get-outputs ~cred stack-id))]
     (doseq [[k o] outs]
       (newline)
       (u/info (:description o))
@@ -53,7 +53,7 @@
     (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
       (assert dns "Root domain setups must use Route53 for DNS"))
     (let [tpl (pod/with-call-in cpod
-                (confetti.cloudformation/template ~creds {:dns? dns}))
+                (confetti.cloudformation/template {:dns? dns}))
           stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
           ran (when-not dry-run
                 (pod/with-call-in cpod
@@ -65,11 +65,11 @@
           (println (:stack-id ran))
           (newline)
           (confetti.report/report-stack-events
-           ~creds
            {:stack-id (:stack-id ran)
+            :cred creds
             :verbose verbose
             :report-cb confetti.report/cf-report})
-          (print-outputs (:stack-id ran))))
+          (print-outputs creds (:stack-id ran))
       fs)))
 
 (defn ^:private fileset->file-map [fs]

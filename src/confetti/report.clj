@@ -24,10 +24,10 @@
                                           (strace/print-stack-trace e))))
 
 (defn mk-reporter
-  [{:keys [stack-id report-cb done-promise]}]
-  {:pre  [stack-id report-cb done-promise]}
+  [{:keys [cred stack-id report-cb done-promise]}]
+  {:pre  [cred stack-id report-cb done-promise]}
   (fn [reported]
-    (let [events (sort-by :timestamp (cf/get-events stack-id))]
+    (let [events (sort-by :timestamp (cf/get-events cred stack-id))]
       (doseq [ev events]
         (when-not (reported ev)
           (report-cb ev)))
@@ -38,8 +38,8 @@
       (reduce conj reported events))))
 
 (defn report-stack-events
-  [{:keys [stack-id report-cb] :as args}]
-  {:pre  [stack-id report-cb]}
+  [{:keys [cred stack-id report-cb] :as args}]
+  {:pre  [cred stack-id report-cb]}
   (let [done   (promise)
         report (mk-reporter (assoc args :done-promise done))
         sched  (util/schedule #(send-off reported report) 300)]
