@@ -51,7 +51,7 @@
     (assert creds "Credentials are required!")
     (assert domain "Domain is required!")
     (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
-      (assert dns "Root domain setups must use Route53 for DNS"))
+      (assert dns "Root domain setups must enable `dns` option"))
     (let [tpl (pod/with-call-in cpod
                 (confetti.cloudformation/template {:dns? dns}))
           stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
@@ -70,6 +70,13 @@
             :verbose verbose
             :report-cb confetti.report/cf-report})
           (print-outputs creds (:stack-id ran))
+          (when dns
+            (newline)
+            (u/info "You're using a root domain setup.")
+            (println "Make sure your domain is setup to use the nameservers by the Route53 hosted zone.")
+            (println "To look up these nameservers go to: ")
+            (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:")
+            (println "In a future release we will print them here directly :)"))))
       fs)))
 
 (defn ^:private fileset->file-map [fs]
