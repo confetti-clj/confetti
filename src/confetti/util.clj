@@ -1,5 +1,6 @@
 (ns confetti.util
-  (:require [clojure.string :as string])
+  (:require [clojure.string :as string]
+            [clojure.java.io :as io])
   (:import [java.util.concurrent Executors TimeUnit]
            [com.google.common.net InternetDomainName]))
 

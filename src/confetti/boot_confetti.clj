@@ -1,7 +1,6 @@
 (ns confetti.boot-confetti
   {:boot/export-tasks true}
-  (:require [confetti.s3-deploy :as s3d]
-            [confetti.report]
+  (:require [confetti.serialize :refer [->str]]
             [clojure.string :as string]
             [clojure.pprint :as pp]
             [boot.pod :as pod]
@@ -18,7 +17,13 @@
 (defn confetti-pod []
   (pod/make-pod (update-in (b/get-env) [:dependencies] into deps)))
 
-(def cpod (confetti-pod))
+(defn prep-pod [cpod]
+  (pod/with-eval-in cpod
+    (require 'confetti.cloudformation)
+    (require 'confetti.s3-deploy)
+    (require 'confetti.serialize)
+    (require 'confetti.report))
+  cpod)
 
 ;; (let [verbose true]
 ;;   (pod/with-call-in cpod
@@ -26,13 +31,11 @@
 ;;      {:stack-id (:stack-id ran)
 ;;       :report-cb confetti.util/print-ev})))
 
-(defn print-outputs [cred stack-id]
-  (let [outs (pod/with-call-in cpod
-               (confetti.cloudformation/get-outputs ~cred stack-id))]
-    (doseq [[k o] outs]
-      (newline)
-      (u/info (:description o))
-      (println "->" (:output-value o)))))
+(defn print-outputs [outs]
+  (doseq [[k o] outs]
+    (newline)
+    (u/info "%s\n" (:description o))
+    (println "->" (:output-value o))))
 
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and Single Page Apps.
@@ -50,26 +53,30 @@
   (b/with-pre-wrap fs
     (assert creds "Credentials are required!")
     (assert domain "Domain is required!")
-    (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
-      (assert dns "Root domain setups must enable `dns` option"))
-    (let [tpl (pod/with-call-in cpod
-                (confetti.cloudformation/template {:dns? dns}))
-          stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
-          ran (when-not dry-run
-                (pod/with-call-in cpod
-                  (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
+    (let [cpod (prep-pod (confetti-pod))]
+      (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
+        (assert dns "Root domain setups must enable `dns` option"))
+      (let [tpl (pod/with-eval-in cpod
+                  (confetti.cloudformation/template {:dns? ~dns}))
+            stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
+            ran (when-not dry-run
+                  (pod/with-call-in cpod
+                    (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
       (if dry-run
         (pp/pprint tpl)
         (do
           (u/info "Reporting stack-creation events for stack:\n")
           (println (:stack-id ran))
           (newline)
-          (confetti.report/report-stack-events
-           {:stack-id (:stack-id ran)
-            :cred creds
-            :verbose verbose
-            :report-cb confetti.report/cf-report})
-          (print-outputs creds (:stack-id ran))
+          (pod/with-eval-in cpod
+            (confetti.report/report-stack-events
+             {:stack-id (:stack-id ~ran)
+              :cred ~creds
+              :verbose ~verbose
+              :report-cb (resolve 'confetti.report/cf-report)}))
+          (print-outputs
+           (pod/with-eval-in cpod
+             (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran))))
           (when dns
             (newline)
             (u/info "You're using a root domain setup.")
@@ -77,10 +84,11 @@
             (println "To look up these nameservers go to: ")
             (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:")
             (println "In a future release we will print them here directly :)"))))
-      fs)))
+      fs))))
 
-(defn ^:private fileset->file-map [fs]
-  (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)}) (b/output-files fs)))
+(defn ^:private fileset->file-maps [fs]
+  (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
+        (b/output-files fs)))
 
 (b/deftask sync-bucket
   "Sync fileset (default) or directory to S3 bucket.
@@ -94,13 +102,16 @@
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert creds "Credentials are required!")
-    (let [file-map (cond
+    (let [cpod     (prep-pod (confetti-pod))
+          file-map (cond
                      fmap  (read-string (slurp (b/tmp-file (get-in fs [:tree fmap]))))
-                     dir   (confetti.s3-deploy/dir->file-maps (clojure.java.io/file dir))
-                     :else (fileset->file-map fs))
-          results (confetti.s3-deploy/sync!
-                   creds bucket file-map
-                   {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report})]
+                     dir   (pod/with-eval-in cpod
+                             (confetti.s3-deploy/dir->file-maps (clojure.java.io/file ~dir)))
+                     :else (fileset->file-maps fs))
+          results (pod/with-eval-in cpod
+                    (confetti.s3-deploy/sync!
+                     ~creds ~bucket (confetti.serialize/->file ~(->str file-map))
+                     {:dry-run? ~dry-run :prune? ~prune :report-fn (resolve 'confetti.report/s3-report)}))]
       (newline)
       (u/info "%s new files uploaded.\n" (-> results :uploaded count))
       (u/info "%s existing files updated.\n" (-> results :updated count))
