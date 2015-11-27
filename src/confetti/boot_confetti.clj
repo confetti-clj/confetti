@@ -91,14 +91,16 @@
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
    c creds K=W     {kw str} "Credentials to use for pushing to S3"
    p prefix PREFIX str      "[not implemented] String to strip from paths in fileset/dir"
-   d dir DIR       str      "[not implemented] Directory to sync"
+   d dir DIR       str      "Directory to sync"
    y dry-run       bool     "Report as usual but don't actually do anything"
    _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert creds "Credentials are required!")
     (newline)
-    (let [file-map (fileset->file-map fs)]
+    (let [file-map (if dir
+                     (confetti.s3-deploy/dir->file-map (clojure.java.io/file dir))
+                     (fileset->file-map fs))]
       (confetti.s3-deploy/sync!
        creds bucket file-map
        {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report}))
