@@ -8,10 +8,8 @@
             [boot.core :as b]))
 
 (def deps '[[camel-snake-kebab "0.3.2"]
-            ;; Should be used in pods
             [confetti/cloudformation "0.1.0-SNAPSHOT"]
             [confetti/s3-deploy "0.1.0-SNAPSHOT"]
-            ;; Ahem...
             [com.google.guava/guava "18.0"]])
 
 (defn confetti-pod []
