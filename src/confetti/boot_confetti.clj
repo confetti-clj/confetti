@@ -88,7 +88,6 @@
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
    c creds K=V     {kw str} "Credentials to use for pushing to S3"
    f fmap PATH     str      "Path to edn file in fileset describing file-map"
-   p prefix PREFIX str      "[not implemented] String to strip from paths in fileset/dir, ignored if fmap is passed"
    d dir DIR       str      "Directory to sync"
    y dry-run       bool     "Report as usual but don't actually do anything"
    _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
