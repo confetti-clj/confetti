@@ -94,16 +94,17 @@
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert creds "Credentials are required!")
-    (newline)
     (let [file-map (cond
                      fmap  (read-string (slurp (b/tmp-file (get-in fs [:tree fmap]))))
                      dir   (confetti.s3-deploy/dir->file-maps (clojure.java.io/file dir))
-                     :else (fileset->file-map fs))]
-      (println
-       (confetti.s3-deploy/sync!
-        creds bucket file-map
-        {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report})))
-    (newline)
+                     :else (fileset->file-map fs))
+          results (confetti.s3-deploy/sync!
+                   creds bucket file-map
+                   {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report})]
+      (newline)
+      (u/info "%s new files uploaded.\n" (-> results :uploaded count))
+      (u/info "%s existing files updated.\n" (-> results :updated count))
+      (u/info "%s files deleted.\n" (-> results :deleted count)))
     fs))
 
 ;; ---
