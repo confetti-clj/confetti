@@ -8,13 +8,13 @@
 
 ;; Reporting S3 ----------------------------------------------------------------
 
-(def s3-colors {:confetti.s3-deploy/added ansi/green
-                :confetti.s3-deploy/changed ansi/yellow
-                :confetti.s3-deploy/removed ansi/red})
+(def s3-colors {:confetti.s3-deploy/upload ansi/green
+                :confetti.s3-deploy/update ansi/yellow
+                :confetti.s3-deploy/delete ansi/red})
 
-(defn s3-report [{:keys [type s3-key]}]
-  (let [color (get s3-colors type)]
-    (println " -" (color (str "[" (name type) "]")) s3-key)))
+(defn s3-report [{:keys [op s3-key] :as ev}]
+  (let [color (get s3-colors op)]
+    (println " -" (color (str "[" (name op) "]")) s3-key)))
 
 
 ;; Reporting Cloudformation ----------------------------------------------------

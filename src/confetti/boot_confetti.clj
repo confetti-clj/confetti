@@ -80,17 +80,16 @@
       fs)))
 
 (defn ^:private fileset->file-map [fs]
-  (into {} (for [[p tf] (:tree fs)]
-             [p (b/tmp-file tf)])))
-
-(defn serialize-file-map [fm]
-  (into {} (for [[p f] fm] [p (.getCanonicalPath f)])))
+  (mapv (fn [[p tf]] {:s3-key p :file (b/tmp-file tf)})
+        (:tree fs)))
 
 (b/deftask sync-bucket
-  "Sync fileset or directory to S3 bucket."
+  "Sync fileset (default) or directory to S3 bucket.
+   Alternatively supply `fmap` describing to-be-uploaded resources."
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
-   c creds K=W     {kw str} "Credentials to use for pushing to S3"
-   p prefix PREFIX str      "[not implemented] String to strip from paths in fileset/dir"
+   c creds K=V     {kw str} "Credentials to use for pushing to S3"
+   f fmap PATH     str      "Path to edn file in fileset describing file-map"
+   p prefix PREFIX str      "[not implemented] String to strip from paths in fileset/dir, ignored if fmap is passed"
    d dir DIR       str      "Directory to sync"
    y dry-run       bool     "Report as usual but don't actually do anything"
    _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
@@ -98,17 +97,18 @@
     (assert bucket "A bucket name is required!")
     (assert creds "Credentials are required!")
     (newline)
-    (let [file-map (if dir
-                     (confetti.s3-deploy/dir->file-map (clojure.java.io/file dir))
-                     (fileset->file-map fs))]
-      (confetti.s3-deploy/sync!
-       creds bucket file-map
-       {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report}))
+    (let [file-map (cond
+                     fmap  (read-string (slurp (b/tmp-file (get-in fs [:tree fmap]))))
+                     dir   (confetti.s3-deploy/dir->file-maps (clojure.java.io/file dir))
+                     :else (fileset->file-map fs))]
+      (println
+       (confetti.s3-deploy/sync!
+        creds bucket file-map
+        {:dry-run? dry-run :prune? prune :report-fn confetti.report/s3-report})))
     (newline)
     fs))
 
 ;; ---
 
 (comment
-
-)
+  )

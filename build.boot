@@ -14,7 +14,10 @@
 (def +version+ "0.1.0-SNAPSHOT")
 (bootlaces! +version+)
 
+(def creds (read-string (slurp "aws-cred.edn")))
+
 (task-options!
+ sync-bucket {:creds creds}
  push {:ensure-clean false}
  pom {:project     'confetti/confetti
       :version     +version+
