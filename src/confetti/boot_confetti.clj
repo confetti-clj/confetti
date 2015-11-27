@@ -80,8 +80,7 @@
       fs)))
 
 (defn ^:private fileset->file-map [fs]
-  (mapv (fn [[p tf]] {:s3-key p :file (b/tmp-file tf)})
-        (:tree fs)))
+  (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)}) (b/output-files fs)))
 
 (b/deftask sync-bucket
   "Sync fileset (default) or directory to S3 bucket.
