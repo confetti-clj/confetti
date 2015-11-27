@@ -12,6 +12,7 @@
 
 (task-options!
  sync-bucket {:creds creds}
+ create-site {:creds creds}
  push {:ensure-clean false}
  pom {:project     'confetti/confetti
       :version     +version+
