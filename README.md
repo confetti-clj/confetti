@@ -53,8 +53,8 @@ root domains without also managing DNS with Route53.
 
 In the future I'd like this tool to setup SSL as well.
 [Let's Encrypt][lets-encrypt] is still in beta but as soon as this is
-generally available and someone wrote a usable Clojure/Java client it
-would be really nice to make it "dead-simeple" to deploy static sites
+generally available and someone wrote an usable Clojure/Java client it
+would be really nice to make it "dead-simple" to deploy static sites
 with SSL
 
 - Free certificates available via letsencrypt.org
