@@ -96,7 +96,7 @@
    f fmap PATH     str      "Path to edn file in fileset describing file-map"
    d dir DIR       str      "Directory to sync"
    y dry-run       bool     "Report as usual but don't actually do anything"
-   _ prune         bool     "Delete files from S3 bucket not in fileset/dir"]
+   p prune         bool     "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert creds "Credentials are required!")
