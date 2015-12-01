@@ -90,7 +90,18 @@
 
 (b/deftask sync-bucket
   "Sync fileset (default) or directory to S3 bucket.
-   Alternatively supply `fmap` describing to-be-uploaded resources."
+   Alternatively supply path `fmap` to an EDN file describing to-be-uploaded resources.
+
+   When supplying file-maps via the `fmap` EDN file the `:file` key can't be a
+   java.io.File object. As a workaround `clojure.java.io/file` will be called on
+   the value of the `:file` key. Ideally this value is an absolute path.
+
+   - `creds` should be a map containing the keys `:access-key` and `:secret-key`
+   - `dir` provides an alternative mechanism to sync filesystem directories to S3
+     (in contrast to syncing files from the fileset)
+   - `dry-run` will cause all S3 related side effects to be skipped
+   - `prune` will cause S3 objects which are not supplied as file-maps to be
+     deleted from the target S3 bucket"
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
    c creds K=V     {kw str} "Credentials to use for pushing to S3"
    f fmap PATH     str      "Path to edn file in fileset describing file-map"
