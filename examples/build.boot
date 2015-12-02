@@ -27,6 +27,12 @@
       (-> fs (add-resource tmp) commit!))))
 
 ;; Actual deployment stuff -----------------------------------------------------
+;; This is a non-trivial example, in many cases just syncing the fileset
+;; is enough. This example is non-trivial for the following reasons:
+;;
+;; - files are gzipped and uploaded w/ custom content-encoding metadata
+;; - files are uploaded to specific locations depending on whether
+;;   they're gzipped or not
 
 (def aws (read-string (slurp "aws.edn")))
 
