@@ -6,8 +6,8 @@
 
 (defn coerce-to-string [x]
   (cond
-    (instance? java.io.File %) (.getCanonicalPath %)
-    (string? %)                %
+    (instance? java.io.File x) (.getCanonicalPath x)
+    (string? x)                x
     :else (throw (ex-info ":file key must be file or string."
                           {:value x}))))
   
