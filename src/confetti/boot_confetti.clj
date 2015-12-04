@@ -35,13 +35,13 @@
     (u/info "%s\n" (:description o))
     (println "->" (:output-value o))))
 
-(defn save-outputs [file-name stack-id outputs]
+(defn save-outputs [file stack-id outputs]
   (->> (for [[k o] outputs]
          [k (:output-value o)])
        (into {:stack-id stack-id})
        pp/pprint
        with-out-str
-       (spit (io/file file-name))))
+       (spit file)))
 
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and Single Page Apps.
@@ -64,7 +64,7 @@
         (assert dns "Root domain setups must enable `dns` option"))
       (let [tpl (pod/with-eval-in cpod
                   (confetti.cloudformation/template {:dns? ~dns}))
-            stn (str (string/replace domain #"\." "-") "-confetti-static-site" )
+            stn (string/replace domain #"\." "-")
             ran (when-not dry-run
                   (pod/with-call-in cpod
                     (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
@@ -80,10 +80,10 @@
               :cred ~creds
               :verbose ~verbose
               :report-cb (resolve 'confetti.report/cf-report)}))
-          (let [fname (str (string/replace domain #"\." "-") ".confetti.edn")
+          (let [fname (str stn ".confetti.edn")
                 outputs (pod/with-eval-in cpod
                           (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
-            (save-outputs fname stn outputs)
+            (save-outputs (io/file fname) (:stack-id ran) outputs)
             (newline)
             (print-outputs outputs)
             (newline)
