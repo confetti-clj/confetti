@@ -126,8 +126,3 @@
       (u/info "%s existing files updated.\n" (-> results :updated count))
       (u/info "%s files deleted.\n" (-> results :deleted count)))
     fs))
-
-;; ---
-
-(comment
-  )
