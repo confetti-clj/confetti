@@ -2,6 +2,7 @@
   {:boot/export-tasks true}
   (:require [confetti.serialize :refer [->str]]
             [clojure.string :as string]
+            [clojure.java.io :as io]
             [clojure.pprint :as pp]
             [boot.pod :as pod]
             [boot.util :as u]
@@ -31,9 +32,16 @@
 
 (defn print-outputs [outs]
   (doseq [[k o] outs]
-    (newline)
     (u/info "%s\n" (:description o))
     (println "->" (:output-value o))))
+
+(defn save-outputs [file-name stack-id outputs]
+  (->> (for [[k o] outputs]
+         [k (:output-value o)])
+       (into {:stack-id stack-id})
+       pp/pprint
+       with-out-str
+       (spit (io/file file-name))))
 
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and Single Page Apps.
@@ -64,7 +72,6 @@
         (pp/pprint tpl)
         (do
           (u/info "Reporting stack-creation events for stack:\n")
-          (println (:stack-id ran))
           (newline)
           (pod/with-eval-in cpod
             (confetti.report/report-stack-events
@@ -72,9 +79,14 @@
               :cred ~creds
               :verbose ~verbose
               :report-cb (resolve 'confetti.report/cf-report)}))
-          (print-outputs
-           (pod/with-eval-in cpod
-             (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran))))
+          (let [fname (str (string/replace domain #"\." "-") ".confetti.edn")
+                outputs (pod/with-eval-in cpod
+                          (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
+            (save-outputs fname stn outputs)
+            (newline)
+            (print-outputs outputs)
+            (newline)
+            (u/info "These outputs have also been saved to %s\n" fname))
           (when dns
             (newline)
             (u/info "You're using a root domain setup.")
