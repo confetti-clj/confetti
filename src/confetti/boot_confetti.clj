@@ -71,7 +71,8 @@
       (if dry-run
         (pp/pprint tpl)
         (do
-          (u/info "Reporting stack-creation events for stack:\n")
+          (u/info "Reporting events generated while creating your stack.\n")
+          (println "Be aware that creation of CloudFront distributions may take up to 15min.")
           (newline)
           (pod/with-eval-in cpod
             (confetti.report/report-stack-events
