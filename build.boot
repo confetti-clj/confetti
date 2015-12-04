@@ -11,8 +11,10 @@
 (def creds (read-string (slurp "aws-cred.edn")))
 
 (task-options!
- sync-bucket {:creds creds}
- create-site {:creds creds}
+ sync-bucket {:secret-key (:secret-key creds)
+              :access-key (:access-key creds)}
+ create-site {:secret-key (:secret-key creds)
+              :access-key (:access-key creds)}
  push {:ensure-clean false}
  pom {:project     'confetti/confetti
       :version     +version+

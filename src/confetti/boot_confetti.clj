@@ -52,17 +52,20 @@
    If you are supplying a root/APEX domain enabling the DNS management via Route53
    is required (more information in the README)."
   [n dns           bool "Handle DNS? (i.e. create Route53 Hosted Zone)"
-   c creds K=W     {kw str} "Credentials to use for creating CloudFormation stack"
+   a access-key A  str  "AWS access key to use"
+   s secret-key S  str  "AWS secret key to use"
    v verbose       bool "Print all events in full during creation"
    d domain DOMAIN str  "Domain of the future site (without protocol)"
    r dry-run       bool "Only print to be ran template, don't run it"]
   (b/with-pre-wrap fs
-    (assert creds "Credentials are required!")
     (assert domain "Domain is required!")
+    (assert access-key "Access Key is required!")
+    (assert secret-key "Secret Key is required!")
     (let [cpod (prep-pod (confetti-pod))]
       (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
         (assert dns "Root domain setups must enable `dns` option"))
-      (let [tpl (pod/with-eval-in cpod
+      (let [creds {:access-key access-key :secret-key secret-key}
+            tpl (pod/with-eval-in cpod
                   (confetti.cloudformation/template {:dns? ~dns}))
             stn (string/replace domain #"\." "-")
             ran (when-not dry-run
@@ -109,22 +112,24 @@
    java.io.File object. As a workaround `clojure.java.io/file` will be called on
    the value of the `:file` key. Ideally this value is an absolute path.
 
-   - `creds` should be a map containing the keys `:access-key` and `:secret-key`
    - `dir` provides an alternative mechanism to sync filesystem directories to S3
      (in contrast to syncing files from the fileset)
    - `dry-run` will cause all S3 related side effects to be skipped
    - `prune` will cause S3 objects which are not supplied as file-maps to be
      deleted from the target S3 bucket"
   [b bucket BUCKET str      "Name of S3 bucket to push files to"
-   c creds K=V     {kw str} "Credentials to use for pushing to S3"
+   a access-key A  str  "AWS access key to use"
+   s secret-key S  str  "AWS secret key to use"
    f fmap PATH     str      "Path to edn file in fileset describing file-map"
    d dir DIR       str      "Directory to sync"
    y dry-run       bool     "Report as usual but don't actually do anything"
    p prune         bool     "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
-    (assert creds "Credentials are required!")
-    (let [cpod     (prep-pod (confetti-pod))
+    (assert access-key "Access Key is required!")
+    (assert secret-key "Secret Key is required!")
+    (let [creds    {:access-key access-key :secret-key secret-key}
+          cpod     (prep-pod (confetti-pod))
           file-map (cond
                      fmap  (read-string (slurp (b/tmp-file (get-in fs [:tree fmap]))))
                      dir   (pod/with-eval-in cpod
