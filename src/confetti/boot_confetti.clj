@@ -117,13 +117,13 @@
    - `dry-run` will cause all S3 related side effects to be skipped
    - `prune` will cause S3 objects which are not supplied as file-maps to be
      deleted from the target S3 bucket"
-  [b bucket BUCKET str      "Name of S3 bucket to push files to"
+  [b bucket BUCKET str  "Name of S3 bucket to push files to"
    a access-key A  str  "AWS access key to use"
    s secret-key S  str  "AWS secret key to use"
-   f fmap PATH     str      "Path to edn file in fileset describing file-map"
-   d dir DIR       str      "Directory to sync"
-   y dry-run       bool     "Report as usual but don't actually do anything"
-   p prune         bool     "Delete files from S3 bucket not in fileset/dir"]
+   f fmap PATH     str  "Path to edn file in fileset describing file-map"
+   d dir DIR       str  "Directory to sync"
+   y dry-run       bool "Report as usual but don't actually do anything"
+   p prune         bool "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert access-key "Access Key is required!")
