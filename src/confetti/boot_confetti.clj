@@ -128,6 +128,7 @@
     (assert bucket "A bucket name is required!")
     (assert access-key "Access Key is required!")
     (assert secret-key "Secret Key is required!")
+    (newline)
     (let [creds    {:access-key access-key :secret-key secret-key}
           cpod     (prep-pod (confetti-pod))
           file-map (cond
@@ -139,8 +140,13 @@
                     (confetti.s3-deploy/sync!
                      ~creds ~bucket (confetti.serialize/->file ~(->str file-map))
                      {:dry-run? ~dry-run :prune? ~prune :report-fn (resolve 'confetti.report/s3-report)}))]
-      (newline)
+      (let [{:keys [uploaded updated unchanged deleted]} results]
+        (if (< 0 (max (count uploaded) (count updated) (count deleted)))
+          (newline)))
+      (u/dbug results)
       (u/info "%s new files uploaded.\n" (-> results :uploaded count))
-      (u/info "%s existing files updated.\n" (-> results :updated count))
+      (u/info "%s existing files updated. %s unchanged.\n"
+              (-> results :updated count)
+              (-> results :unchanged count))
       (u/info "%s files deleted.\n" (-> results :deleted count)))
     fs))
