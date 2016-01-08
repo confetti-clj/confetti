@@ -105,40 +105,54 @@
         (b/output-files fs)))
 
 (b/deftask sync-bucket
-  "Sync fileset (default) or directory to S3 bucket.
-   Alternatively supply path `fmap` to an EDN file describing to-be-uploaded resources.
+  "Sync fileset (default), directory or selected files to S3 bucket.
 
-   When supplying file-maps via the `fmap` EDN file the `:file` key can't be a
-   java.io.File object. As a workaround `clojure.java.io/file` will be called on
-   the value of the `:file` key. Ideally this value is an absolute path.
+   Use the `dir` option to specify a directory to sync. To upload only selected
+   files or attach special metadata use `file-maps` or `file-maps-path` options.
+   These two options are very similar `file-maps` takes file-maps as EDN data
+   whereas `file-maps-path` loads this EDN data from a file in the fileset.
 
-   - `dir` provides an alternative mechanism to sync filesystem directories to S3
-     (in contrast to syncing files from the fileset)
+   In both cases the EDN data should be a sequence of maps containing at least an
+   `:s3-key` and `:file` key. Optionally these maps may contain a `:metadata` key.
+   The `:file` key can be a path pointing to a file in the fileset (no leading /)
+   or a path pointing to any other file on your filesystem (with leading /).
+
+   Other options:
    - `dry-run` will cause all S3 related side effects to be skipped
    - `prune` will cause S3 objects which are not supplied as file-maps to be
      deleted from the target S3 bucket"
-  [b bucket BUCKET str  "Name of S3 bucket to push files to"
-   a access-key A  str  "AWS access key to use"
-   s secret-key S  str  "AWS secret key to use"
-   f fmap PATH     str  "Path to edn file in fileset describing file-map"
-   d dir DIR       str  "Directory to sync"
-   y dry-run       bool "Report as usual but don't actually do anything"
-   p prune         bool "Delete files from S3 bucket not in fileset/dir"]
+  [b bucket         BUCKET str  "Name of S3 bucket to push files to"
+   a access-key     ACCESS str  "AWS access key to use"
+   s secret-key     SECRET str  "AWS secret key to use"
+   d dir            DIR    str  "Directory to sync as is"
+   m file-maps      MAPS   edn  "EDN description of files to upload"
+   f file-maps-path PATH   str  "Path to file w/ EDN description of files to upload (file must be in fileset)"
+   y dry-run               bool "Report as usual but don't actually do anything"
+   p prune                 bool "Delete files from S3 bucket not in fileset/dir"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert access-key "Access Key is required!")
     (assert secret-key "Secret Key is required!")
     (newline)
-    (let [creds    {:access-key access-key :secret-key secret-key}
-          cpod     (prep-pod (confetti-pod))
-          file-map (cond
-                     fmap  (read-string (slurp (b/tmp-file (get-in fs [:tree fmap]))))
-                     dir   (pod/with-eval-in cpod
-                             (confetti.s3-deploy/dir->file-maps (clojure.java.io/file ~dir)))
-                     :else (fileset->file-maps fs))
+    (let [creds {:access-key access-key :secret-key secret-key}
+          cpod  (prep-pod (confetti-pod))
+          ;; Read file-maps from the various possible sources
+          fmaps (cond
+                  file-maps      file-maps
+                  file-maps-path (read-string (slurp (b/tmp-file (get-in fs [:tree file-maps-path]))))
+                  dir            (pod/with-eval-in cpod
+                                   (confetti.s3-deploy/dir->file-maps (clojure.java.io/file ~dir)))
+                  :else          (fileset->file-maps fs))
+          ;; If relative paths are supplied lookup files in fileset
+          fmaps* (mapv (fn [{:keys [file] :as fm}]
+                         ;; (println fm)
+                         (if (and (string? file) (not (.startsWith file "/")))
+                           (assoc fm :file (b/tmp-file (get-in fs [:tree file])))
+                           fm))
+                       fmaps)
           results (pod/with-eval-in cpod
                     (confetti.s3-deploy/sync!
-                     ~creds ~bucket (confetti.serialize/->file ~(->str file-map))
+                     ~creds ~bucket (confetti.serialize/->file ~(->str fmaps*))
                      {:dry-run? ~dry-run :prune? ~prune :report-fn (resolve 'confetti.report/s3-report)}))]
       (let [{:keys [uploaded updated unchanged deleted]} results]
         (if (< 0 (max (count uploaded) (count updated) (count deleted)))
