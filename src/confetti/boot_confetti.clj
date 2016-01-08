@@ -141,15 +141,17 @@
                   file-maps      file-maps
                   file-maps-path (read-string (slurp (b/tmp-file (get-in fs [:tree file-maps-path]))))
                   dir            (pod/with-eval-in cpod
-                                   (confetti.s3-deploy/dir->file-maps (clojure.java.io/file ~dir)))
+                                   (-> (clojure.java.io/file ~dir)
+                                       confetti.s3-deploy/dir->file-maps
+                                       confetti.serialize/->str))
                   :else          (fileset->file-maps fs))
           ;; If relative paths are supplied lookup files in fileset
           fmaps* (mapv (fn [{:keys [file] :as fm}]
-                         ;; (println fm)
                          (if (and (string? file) (not (.startsWith file "/")))
                            (assoc fm :file (b/tmp-file (get-in fs [:tree file])))
                            fm))
                        fmaps)
+
           results (pod/with-eval-in cpod
                     (confetti.s3-deploy/sync!
                      ~creds ~bucket (confetti.serialize/->file ~(->str fmaps*))
