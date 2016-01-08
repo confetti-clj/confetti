@@ -1,7 +1,7 @@
 (set-env! :dependencies '[[confetti/confetti "0.1.0-SNAPSHOT" :scope "test"]
                           [org.martinklepsch/boot-gzip "0.1.2" :scope "test"]])
 
-(require '[confetti.boot-confetti :refer [sync-bucket]]
+(require '[confetti.boot-confetti :refer [sync-bucket create-site]]
          '[org.martinklepsch.boot-gzip :refer [gzip]]
          '[clojure.java.io :as io]
          '[clojure.string :as string])
@@ -36,6 +36,12 @@
 
 (def aws (read-string (slurp "aws.edn")))
 
+(task-options!
+ create-site {:secret-key     (:secret-key aws)
+              :access-key     (:access-key aws)}
+ sync-bucket {:secret-key     (:secret-key aws)
+              :access-key     (:access-key aws)})
+
 (def file-maps-file "file-maps.edn")
 
 (defn ->s3-key [fileset-path gzip?]
@@ -62,6 +68,4 @@
         (save-file-maps)
         (sync-bucket :file-maps-path file-maps-file
                      :prune          true
-                     :bucket         (:bucket aws)
-                     :secret-key     (:secret-key aws)
-                     :access-key     (:access-key aws))))
+                     :bucket         (:bucket aws))))
