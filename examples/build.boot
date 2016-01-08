@@ -43,10 +43,10 @@
     (str (when gzip? "compressed/") p)))
 
 (defn fileset->file-maps [fileset]
-  (for [[_ tmpf] (:tree fileset)
-        :let [gzip? (.endsWith (:path tmpf) ".gz")]]
-    {:s3-key   (->s3-key (:path tmpf) gzip?)
-     :file     (.getCanonicalPath (tmp-file tmpf))
+  (for [[path tmpf] (:tree fileset)
+        :let [gzip? (.endsWith path ".gz")]]
+    {:file     path
+     :s3-key   (->s3-key path gzip?)
      :metadata (when gzip? {:content-encoding "gzip"})}))
 
 (deftask save-file-maps []
@@ -57,9 +57,11 @@
       (-> fs (add-resource tmp) commit!))))
 
 (deftask deploy []
-  (comp (create-files :number 5)
+  (comp (create-files :number 10)
         (gzip :regex [#"nested/*"])
         (save-file-maps)
-        (sync-bucket :fmap    file-maps-file
-                     :bucket  (:bucket aws)
-                     :creds   (select-keys aws [:access-key :secret-key]))))
+        (sync-bucket :file-maps-path file-maps-file
+                     :prune          true
+                     :bucket         (:bucket aws)
+                     :secret-key     (:secret-key aws)
+                     :access-key     (:access-key aws))))
