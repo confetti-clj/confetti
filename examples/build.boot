@@ -34,6 +34,8 @@
 ;; - files are uploaded to specific locations depending on whether
 ;;   they're gzipped or not
 
+;; The example expects your AWS info to be in a file `aws.edn`,
+;; it should have the keys `:bucket`, `:access-key` & `:secret-key`.
 (def aws (read-string (slurp "aws.edn")))
 
 (task-options!

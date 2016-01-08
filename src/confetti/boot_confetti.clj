@@ -151,7 +151,6 @@
                            (assoc fm :file (b/tmp-file (get-in fs [:tree file])))
                            fm))
                        fmaps)
-
           results (pod/with-eval-in cpod
                     (confetti.s3-deploy/sync!
                      ~creds ~bucket (confetti.serialize/->file ~(->str fmaps*))
