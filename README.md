@@ -62,6 +62,8 @@ distribution. This usually takes between 10-15min.
 > have to get the information like bucket name, access key, etc
 > manually so it's recommended to just leave it running.
 
+![Confetti create-site progress](https://cloud.githubusercontent.com/assets/97496/12223984/2dec1b0e-b7e6-11e5-889c-2ea7a4af0fec.png)
+
 After the `create-site` task finishes you should find a file in your
 current working directory: `my-app-com.confetti.edn`. It's contents should
 contain everything important about your newly provisioned resources:
