@@ -127,7 +127,7 @@ to the Cloudfront distribution.
 > registrar so it's recommended to check their individual
 > documentation.
 
-### Getting Help
+## Getting Help
 
 To get help on the command line you can always run:
 
