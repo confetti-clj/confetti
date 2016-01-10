@@ -44,10 +44,10 @@
        (spit file)))
 
 (b/deftask create-site
-  "Create all resources for ideal deployment of static sites and Single Page Apps.
+  "Create all resources for ideal deployment of static sites and single page apps.
 
    The domain your site should be reached under should be passed via the `domain`
-   option.
+   option. The `access-key` and `secret-key` options should contain valid AWS creds.
 
    If you are supplying a root/APEX domain enabling the DNS management via Route53
    is required (more information in the README)."
@@ -93,10 +93,10 @@
             (u/info "These outputs have also been saved to %s\n" fname))
           (when dns
             (newline)
-            (u/info "You're using a root domain setup.")
+            (u/info "You're using a root domain setup.\n")
             (println "Make sure your domain is setup to use the nameservers by the Route53 hosted zone.")
             (println "To look up these nameservers go to: ")
-            (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:")
+            (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
             (println "In a future release we will print them here directly :)"))))
       fs))))
 
