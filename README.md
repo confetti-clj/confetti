@@ -7,7 +7,13 @@
   anymore. No servers to administrate no headaches to kill with aspirin.
   Setting it all up however is not as straightforward. Confetti is an attempt
   at encoding best practices into a repeatable program using [CloudFormation][cf]
-  and providing handy tools for basic as well as advanced deployment scenarios. 
+  and providing handy tools for basic as well as advanced deployment scenarios.
+
+[](dependency)
+```clojure
+[confetti/confetti "0.1.0"] ;; latest release
+```
+[](/dependency)
 
 ## Features
 
