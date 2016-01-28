@@ -128,7 +128,8 @@
    m file-maps      MAPS   edn  "EDN description of files to upload"
    f file-maps-path PATH   str  "Path to file w/ EDN description of files to upload (file must be in fileset)"
    y dry-run               bool "Report as usual but don't actually do anything"
-   p prune                 bool "Delete files from S3 bucket not in fileset/dir"]
+   p prune                 bool "Delete files from S3 bucket not in fileset/dir"
+   c cloudfront-id  DIST   str  "CloudFront Distribution ID to create invalidation (optional)"]
   (b/with-pre-wrap fs
     (assert bucket "A bucket name is required!")
     (assert access-key "Access Key is required!")
@@ -156,9 +157,14 @@
                      ~creds ~bucket (confetti.serialize/->file ~(->str fmaps*))
                      {:dry-run? ~dry-run :prune? ~prune :report-fn (resolve 'confetti.report/s3-report)}))]
       (let [{:keys [uploaded updated unchanged deleted]} results]
-        (if (< 0 (max (count uploaded) (count updated) (count deleted)))
-          (newline)))
-      (u/dbug results)
+        (when (< 0 (max (count uploaded) (count updated) (count deleted)))
+          (newline))
+        (let [paths (mapv #(str "/" %) (concat uploaded updated deleted))]
+          (when (and cloudfront-id (seq paths))
+            (u/info "Creating CloudFront invalidation for %s paths.\n" (count paths))
+            (u/dbug "Paths: %s\n" (pr-str paths))
+            (pod/with-eval-in cpod
+              (confetti.s3-deploy/cloudfront-invalidate! ~creds ~cloudfront-id ~paths)))))
       (u/info "%s new files uploaded.\n" (-> results :uploaded count))
       (u/info "%s existing files updated. %s unchanged.\n"
               (-> results :updated count)
