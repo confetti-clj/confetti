@@ -19,7 +19,7 @@
 
 - Create all AWS resources required for ideal deployment of static sites
   - S3 Bucket, Bucket Policy, Cloudfront Distribution
-- Provide a sepatarate user & access key that can only push to the bucket
+- Provide a separate user & access key that can only push to the bucket
 - *(optional)* Setup DNS via Route 53
 - Follow [AWS best practices for deploying static sites][aws-website-hosting].
 
