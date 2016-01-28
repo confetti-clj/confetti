@@ -71,34 +71,34 @@
             ran (when-not dry-run
                   (pod/with-call-in cpod
                     (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
-      (if dry-run
-        (pp/pprint tpl)
-        (do
-          (u/info "Reporting events generated while creating your stack.\n")
-          (println "Be aware that creation of CloudFront distributions may take up to 15min.")
-          (newline)
-          (pod/with-eval-in cpod
-            (confetti.report/report-stack-events
-             {:stack-id (:stack-id ~ran)
-              :cred ~creds
-              :verbose ~verbose
-              :report-cb (resolve 'confetti.report/cf-report)}))
-          (let [fname (str stn ".confetti.edn")
-                outputs (pod/with-eval-in cpod
-                          (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
-            (save-outputs (io/file fname) (:stack-id ran) outputs)
-            (newline)
-            (print-outputs outputs)
-            (newline)
-            (u/info "These outputs have also been saved to %s\n" fname))
-          (when dns
-            (newline)
-            (u/info "You're using a root domain setup.\n")
-            (println "Make sure your domain is setup to use the nameservers by the Route53 hosted zone.")
-            (println "To look up these nameservers go to: ")
-            (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
-            (println "In a future release we will print them here directly :)"))))
-      fs))))
+        (if dry-run
+          (pp/pprint tpl)
+          (do
+           (u/info "Reporting events generated while creating your stack.\n")
+           (println "Be aware that creation of CloudFront distributions may take up to 15min.")
+           (newline)
+           (pod/with-eval-in cpod
+             (confetti.report/report-stack-events
+              {:stack-id (:stack-id ~ran)
+               :cred ~creds
+               :verbose ~verbose
+               :report-cb (resolve 'confetti.report/cf-report)}))
+           (let [fname (str stn ".confetti.edn")
+                 outputs (pod/with-eval-in cpod
+                           (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
+             (save-outputs (io/file fname) (:stack-id ran) outputs)
+             (newline)
+             (print-outputs outputs)
+             (newline)
+             (u/info "These outputs have also been saved to %s\n" fname))
+           (when dns
+             (newline)
+             (u/info "You're using a root domain setup.\n")
+             (println "Make sure your domain is setup to use the nameservers by the Route53 hosted zone.")
+             (println "To look up these nameservers go to: ")
+             (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
+             (println "In a future release we will print them here directly :)"))))
+       fs))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
