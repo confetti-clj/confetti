@@ -1,11 +1,11 @@
 (set-env!
  :source-paths   #{"src"}
- :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]])
+ :dependencies '[[adzerk/bootlaces "0.1.14" :scope "test"]])
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
          '[confetti.boot-confetti :refer [create-site sync-bucket]])
 
-(def +version+ "0.1.0")
+(def +version+ "0.1.1")
 (bootlaces! +version+)
 
 (def creds (read-string (slurp "aws-cred.edn")))
