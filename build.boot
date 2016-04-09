@@ -5,7 +5,7 @@
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
          '[confetti.boot-confetti :refer [create-site sync-bucket]])
 
-(def +version+ "0.1.1")
+(def +version+ "0.1.2-SNAPSHOT")
 (bootlaces! +version+)
 
 (def creds (read-string (slurp "aws-cred.edn")))
