@@ -154,7 +154,7 @@
                        fmaps)
           results (pod/with-eval-in cpod
                     (confetti.s3-deploy/sync!
-                     ~creds ~bucket (confetti.serialize/->file ~(->str fmaps*))
+                     ~creds ~bucket (confetti.serialize/->file ~(pod/send! (->str fmaps*)))
                      {:dry-run? ~dry-run :prune? ~prune :report-fn (resolve 'confetti.report/s3-report)}))]
       (let [{:keys [uploaded updated unchanged deleted]} results]
         (when (< 0 (max (count uploaded) (count updated) (count deleted)))

@@ -11,7 +11,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.1"] ;; latest release
+[confetti/confetti "0.1.2-SNAPSHOT"] ;; latest release
 ```
 [](/dependency)
 
