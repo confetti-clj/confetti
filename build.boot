@@ -8,7 +8,11 @@
 (def +version+ "0.1.2-SNAPSHOT")
 (bootlaces! +version+)
 
-(def creds (read-string (slurp "aws-cred.edn")))
+(def creds (try
+             (read-string (slurp "aws-cred.edn"))
+             (catch java.io.FileNotFoundException e
+               (boot.util/warn "aws-cred.edn not found, no authentication will be performed\n")
+               "nil")))
 
 (task-options!
  sync-bucket {:secret-key (:secret-key creds)
