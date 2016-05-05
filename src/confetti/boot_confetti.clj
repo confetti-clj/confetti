@@ -160,7 +160,7 @@
         (when (< 0 (max (count uploaded) (count updated) (count deleted)))
           (newline))
         (let [paths (mapv #(str "/" %) (concat uploaded updated deleted))]
-          (when (and cloudfront-id (seq paths))
+          (when (and cloudfront-id (seq paths) (not dry-run))
             (u/info "Creating CloudFront invalidation for %s paths.\n" (count paths))
             (u/dbug "Paths: %s\n" (pr-str paths))
             (pod/with-eval-in cpod
