@@ -14,7 +14,7 @@
             [com.google.guava/guava "18.0"]])
 
 (defn confetti-pod []
-  (pod/make-pod (update-in (b/get-env) [:dependencies] into deps)))
+  (pod/make-pod (assoc (b/get-env) :dependencies deps)))
 
 (defn prep-pod [cpod]
   (pod/with-eval-in cpod

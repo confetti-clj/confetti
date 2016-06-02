@@ -10,7 +10,7 @@
     (string? x)                x
     :else (throw (ex-info ":file key must be file or string."
                           {:value x}))))
-  
+
 (defn ->str [file-maps]
   (mapv #(update % :file coerce-to-string) file-maps))
 
