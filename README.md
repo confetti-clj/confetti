@@ -142,6 +142,16 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 ## Appendix
 
+#### Additional Tweaks
+
+- Add SSL:
+  - Get an SSL Cert using AWS Certificate Manager (ACM)
+  - Switch **Origin** Protocol Policy to "HTTP Only"
+  - Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
+  
+- Enable Gzipping
+  - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
+
 #### Future Improvements
 
 - When creating a static site on a subdomain of a domain that is already managed via Route53
