@@ -4,14 +4,14 @@
 
 **Rationale**: Static sites are fun. Deploying to S3 is pure
   joy. CloudFront makes scaling something you don't think about
-  anymore. No servers to administrate; no tears to cry.  
+  anymore. No servers to administrate; no tears to cry.
   Setting it all up however is not as straightforward. Confetti is an attempt
   at encoding best practices into a repeatable program using [CloudFormation][cf]
   and providing handy tools for basic as well as advanced deployment scenarios.
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.2-SNAPSHOT"] ;; latest release
+[confetti/confetti "0.1.2"] ;; latest release
 ```
 [](/dependency)
 
