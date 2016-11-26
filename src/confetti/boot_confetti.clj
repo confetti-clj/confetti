@@ -136,7 +136,7 @@
         (b/output-files fs)))
 
 (defn read-confetti-edn [id]
-  (let [f (io/file (str id ".confetti.edn"))]
+  (let [f (io/file (if (.endsWith id ".confetti.edn") id (str id ".confetti.edn")))]
     (assert-exit (.exists f) (str "The file " (.getName f) " could not be found!"))
     (-> f slurp edn/read-string)))
 
