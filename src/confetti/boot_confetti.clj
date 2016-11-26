@@ -101,19 +101,26 @@
                              (remove (comp :cloudfront-url edn/read-string slurp))))]
       (doseq [p preliminary]
         (u/info "Fetching outputs for %s... " (.getName p))
+        ;; TODO implement complete? check and skip fetching if so
         (let [stack-id    (-> p slurp edn/read-string :stack-id)
               outputs     (-> (fetch-stack-outputs cpod creds stack-id) process-outputs)
               nameservers (when-let [hzid (:hosted-zone-id outputs)]
                             (fetch-nameservers cpod creds hzid))
               domain      (string/replace (:website-url outputs) #"^http.*:\/\/" "")]
           (when outputs
-            (save-outputs p stack-id (merge outputs {:name-servers nameservers}))
+            (save-outputs p stack-id (cond-> outputs name-servers (assoc :name-servers nameservers)))
             (u/info "saved.\n")
-            (newline)
+            ;; Route53 not used, user probably wants to point some CNAME to the Cloudfront distribution
+            (when-not (seq nameservers)
+              (newline)
+              (println "The URL of your Cloudfront distribution is" (:cloudfront-url outputs))
+              (println "You can now use it as CNAME value in your DNS records."))
+            ;; Root domain/Route53 case
             (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
+              (newline)
               (u/warn "You're using a root/apex domain. Please note the that your site won't work unless\nyou use Route53's nameservers for your domain.\n"))
-            (newline)
             (when (seq nameservers)
+              (newline)
               (report-nameservers nameservers))))))))
 
 (b/deftask report-progress
