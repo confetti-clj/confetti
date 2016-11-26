@@ -33,12 +33,6 @@
      (doseq [msg msgs]
        (u/fail (str msg "\n\n"))))))
 
-;; (let [verbose true]
-;;   (pod/with-call-in cpod
-;;     (confetti.report/report-stack-events
-;;      {:stack-id (:stack-id ran)
-;;       :report-cb confetti.util/print-ev})))
-
 (defn print-outputs [outs]
   (doseq [[k o] outs]
     (u/info "%s\n" (:description o))
