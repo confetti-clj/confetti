@@ -181,11 +181,15 @@
          (if dry-run
            (pp/pprint tpl)
            (save-outputs (io/file fname) (:stack-id ran) {})))))
-   (report-progress :confetti-edn (string/replace domain #"\." "-")
-                    :access-key access-key :secret-key secret-key
-                    :verbose verbose)
-   (fetch-outputs :confetti-edn (string/replace domain #"\." "-")
-                  :access-key access-key :secret-key secret-key)))
+   (if-not dry-run
+     (report-progress :confetti-edn (string/replace domain #"\." "-")
+                      :access-key access-key :secret-key secret-key
+                      :verbose verbose)
+     identity)
+   (if-not dry-run
+     (fetch-outputs :confetti-edn (string/replace domain #"\." "-")
+                    :access-key access-key :secret-key secret-key)
+     identity)))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
