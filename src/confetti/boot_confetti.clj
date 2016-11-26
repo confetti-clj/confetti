@@ -24,7 +24,8 @@
     (require 'confetti.cloudformation)
     (require 'confetti.s3-deploy)
     (require 'confetti.serialize)
-    (require 'confetti.report))
+    (require 'confetti.report)
+    (require 'amazonica.aws.route53))
   cpod)
 
 (defn assert-exit [assert-success? & msgs]
@@ -38,13 +39,12 @@
     (u/info "%s\n" (:description o))
     (println "->" (:output-value o))))
 
+(defn process-outputs [outputs]
+  (when outputs
+    (into {} (for [[k o] outputs] [k (:output-value o)]))))
+
 (defn save-outputs [file stack-id outputs]
-  (->> (for [[k o] outputs]
-         [k (:output-value o)])
-       (into {:stack-id stack-id})
-       pp/pprint
-       with-out-str
-       (spit file)))
+  (->> outputs (merge {:stack-id stack-id}) pp/pprint with-out-str (spit file)))
 
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and single page apps.
@@ -91,8 +91,8 @@
                :cred ~creds
                :verbose ~verbose
                :report-cb (resolve 'confetti.report/cf-report)}))
-           (let [outputs (pod/with-eval-in cpod
-                           (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
+           (let [outputs (process-outputs (pod/with-eval-in cpod
+                                            (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran))))]
              (save-outputs (io/file fname) (:stack-id ran) outputs)
              (newline)
              (print-outputs outputs)
@@ -106,6 +106,31 @@
              (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
              (println "In a future release we will print them here directly :)"))))
        fs))))
+
+(defn fetch-nameservers [pod creds hosted-zone-id]
+  (let [resp (pod/with-eval-in pod (amazonica.aws.route53/get-hosted-zone ~creds {:id ~hosted-zone-id}))
+        nss  (-> resp :delegation-set :name-servers)]
+    (if (seq nss)
+      nss
+      (ex-info (str "Nameservers for hosted zone " hosted-zone-id " could not be retrieved")
+               {:amazonica.aws.route53/get-hosted-zone resp}))))
+
+(defn fetch-stack-outputs [pod creds stack-id]
+  (pod/with-eval-in pod
+    (try
+      (confetti.cloudformation/get-outputs ~creds ~stack-id)
+      (catch Exception e
+        (boot.util/fail "%s: %s\n" (.getMessage e) (-> e ex-data :stack-info :stack-status))
+        (println (ex-data e))))))
+
+(defn report-nameservers [nameservers]
+  (do
+    (u/info "These are the nameservers for your Route53 hosted zone:\n")
+    (println "(You may now want to set these as nameservers in your domain management console.)")
+    (newline)
+    (doseq [ns nameservers]
+      (println "    " ns))
+    (newline)))
 
 (b/deftask fetch-outputs
   "Download the Cloudformation outputs for all preliminary confetti.edn files in the current directory"
@@ -121,15 +146,14 @@
                            (filter #(.endsWith (.getName %) ".confetti.edn"))
                            (remove (comp :cloudfront-url edn/read-string slurp)))]
       (doseq [p preliminary]
-        (u/info "Fetching outputs for %s\n" (.getName p))
-        (let [stack-id (-> p slurp edn/read-string :stack-id)
-              outputs  (pod/with-eval-in cpod
-                         (try
-                           (confetti.cloudformation/get-outputs ~creds ~stack-id)
-                           (catch Exception e
-                             (boot.util/fail "%s: %s\n" (.getMessage e) (-> e ex-data :stack-info :stack-status))
-                             (println (ex-data e)))))]
-          (save-outputs p stack-id outputs))))))
+        (u/info "Fetching outputs for %s... " (.getName p))
+        (let [stack-id    (-> p slurp edn/read-string :stack-id)
+              outputs     (-> (fetch-stack-outputs cpod creds stack-id) process-outputs)
+              nameservers (when outputs (fetch-nameservers cpod creds (:hosted-zone-id outputs)))]
+          (when outputs
+            (save-outputs p stack-id (merge outputs {:name-servers nameservers}))
+            (u/info "done.\n")
+            (report-nameservers nameservers)))))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
