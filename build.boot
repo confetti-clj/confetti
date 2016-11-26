@@ -1,6 +1,8 @@
 (set-env!
  :source-paths   #{"src"}
- :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]])
+ :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]
+                 [amazonica/amazonica "0.3.33" :scope "test"]
+                 [com.google.guava/guava "18.0" :scope "test"]])
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
          '[confetti.boot-confetti :refer [create-site fetch-outputs sync-bucket]])
@@ -8,11 +10,12 @@
 (def +version+ "0.1.3")
 (bootlaces! +version+)
 
-(def creds (try
-             (read-string (slurp "aws-cred.edn"))
-             (catch java.io.FileNotFoundException e
-               (boot.util/warn "aws-cred.edn not found, no authentication will be performed\n")
-               "nil")))
+(def creds
+  (try
+    (read-string (slurp "aws-cred.edn"))
+    (catch java.io.FileNotFoundException e
+      (boot.util/warn "aws-cred.edn not found, no authentication will be performed\n")
+      "nil")))
 
 (task-options!
  sync-bucket {:secret-key (:secret-key creds)
