@@ -2,6 +2,8 @@
 
 **(alpha)** A tool to help authoring static sites with Amazon Web Services (AWS).
 
+[usage](#usage) | [change log](#changes) | [appendix](#appendix)
+
 **Rationale**: Static sites are fun. Deploying to S3 is pure
   joy. CloudFront makes scaling something you don't think about
   anymore. No servers to administrate; no tears to cry.
@@ -11,7 +13,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.2"] ;; latest release
+[confetti/confetti "0.1.3"] ;; latest release
 ```
 [](/dependency)
 
@@ -135,10 +137,25 @@ To get help on the command line you can always run:
 
 ```
 boot create-site --help
+boot fetch-outputs --help
 boot sync-bucket --help
 ```
 
 Also feel free to open issues to ask questions or suggest improvements.
+
+## Changes
+
+#### 0.1.3
+
+- A `fetch-outputs` task has been added that can be used to download
+  outputs of Cloudformation stacks. Previously the reporting often got stuck
+  and didn't save stack outputs properly.
+  To circumvent this you may now cancel the reporting and call `fetch-outputs`
+  at any later point in time to download the outputs.
+- The `sync-bucket` task now provides a `confetti-edn` option that can be used
+  to supply the some-id part of a `{some-id}.confetti.edn`. The information
+  in that file will then be used for instead of the regular task options.
+- General improvements around error handling and option validation.
 
 ## Appendix
 
@@ -148,7 +165,7 @@ Also feel free to open issues to ask questions or suggest improvements.
   - Get an SSL Cert using AWS Certificate Manager (ACM)
   - Switch **Origin** Protocol Policy to "HTTP Only"
   - Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
-  
+
 - Enable Gzipping
   - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
 
