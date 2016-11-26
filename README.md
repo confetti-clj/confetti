@@ -60,9 +60,11 @@ What you're waiting for now is the creation of your CloudFront
 distribution. This usually takes between 10-15min.
 
 > You may kill the process at this point. Everything is running
-> remotely and won't be interrupted. However if you kill it you will
-> have to get the information like bucket name, access key, etc
-> manually so it's recommended to just leave it running.
+> remotely and won't be interrupted. A `.confetti.edn` file is saved
+> in your current working directory and if using the `fetch-outputs`
+> task with sufficient credentials you can download all useful
+> information at any point in time. (The task will tell you if the
+> stack isn't ready yet as well.)
 
 ![Confetti create-site progress](https://cloud.githubusercontent.com/assets/97496/12223984/2dec1b0e-b7e6-11e5-889c-2ea7a4af0fec.png)
 
