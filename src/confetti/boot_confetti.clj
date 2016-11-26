@@ -124,13 +124,12 @@
         (println (ex-data e))))))
 
 (defn report-nameservers [nameservers]
-  (do
-    (u/info "These are the nameservers for your Route53 hosted zone:\n")
-    (println "(You may now want to set these as nameservers in your domain management console.)")
-    (newline)
-    (doseq [ns nameservers]
-      (println "    " ns))
-    (newline)))
+  (u/info "These are the nameservers for your Route53 hosted zone:\n")
+  (println "(You may now want to set these as nameservers in your domain management console.)")
+  (newline)
+  (doseq [ns nameservers]
+    (println "    " ns))
+  (newline))
 
 (b/deftask fetch-outputs
   "Download the Cloudformation outputs for all preliminary confetti.edn files in the current directory"
@@ -149,11 +148,13 @@
         (u/info "Fetching outputs for %s... " (.getName p))
         (let [stack-id    (-> p slurp edn/read-string :stack-id)
               outputs     (-> (fetch-stack-outputs cpod creds stack-id) process-outputs)
-              nameservers (when outputs (fetch-nameservers cpod creds (:hosted-zone-id outputs)))]
+              nameservers (when-let [hzid (:hosted-zone-id outputs)]
+                            (fetch-nameservers cpod creds hzid))]
           (when outputs
             (save-outputs p stack-id (merge outputs {:name-servers nameservers}))
             (u/info "done.\n")
-            (report-nameservers nameservers)))))))
+            (when (seq nameservers)
+              (report-nameservers nameservers))))))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
