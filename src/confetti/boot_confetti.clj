@@ -34,6 +34,9 @@
      (doseq [msg msgs]
        (u/fail (str msg "\n\n"))))))
 
+(defn human-time [] ; utter hack I guess...
+  (format "%02d:%02d" (.getHours (java.util.Date.)) (.getMinutes (java.util.Date.))))
+
 (defn print-outputs [outs]
   (doseq [[k o] outs]
     (u/info "%s\n" (:description o))
@@ -126,10 +129,10 @@
           cedn (read-confetti-edn confetti-edn)
           creds {:access-key access-key :secret-key secret-key}]
       (u/info "Reporting events generated while creating your stack.\n")
-      (println "Be aware that creation of CloudFront distributions may take up to 15min.")
+      (println "Be aware that creation of CloudFront distributions may take up to 15min. It is" (human-time) "now.")
       (println "In case you connection breaks, this process fails or you just need the terminal for something else you can run the following later:")
       (newline)
-      (println "    boot fetch-outputs --access-key " access-key " --secret-key " secret-key " --confetti-edn " confetti-edn)
+      (println "    boot fetch-outputs --access-key" access-key "--secret-key" secret-key "--confetti-edn" confetti-edn)
       (newline)
       (pod/with-eval-in cpod
         (confetti.report/report-stack-events
