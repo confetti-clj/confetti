@@ -3,7 +3,7 @@
  :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]])
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
-         '[confetti.boot-confetti :refer [create-site sync-bucket]])
+         '[confetti.boot-confetti :refer [create-site fetch-outputs sync-bucket]])
 
 (def +version+ "0.1.2")
 (bootlaces! +version+)
@@ -17,6 +17,8 @@
 (task-options!
  sync-bucket {:secret-key (:secret-key creds)
               :access-key (:access-key creds)}
+ fetch-outputs {:secret-key (:secret-key creds)
+                :access-key (:access-key creds)}
  create-site {:secret-key (:secret-key creds)
               :access-key (:access-key creds)}
  push {:ensure-clean false}
