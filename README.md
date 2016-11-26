@@ -1,8 +1,8 @@
 ![confetti-logo-small](https://cloud.githubusercontent.com/assets/97496/11431670/0ef1bb58-949d-11e5-83f7-d07cf1dd89c7.png)
 
-**(alpha)** A tool to help authoring static sites with Amazon Web Services (AWS).
-
 [usage](#usage) | [change log](#changes) | [appendix](#appendix)
+
+**(alpha)** A tool to help authoring static sites with Amazon Web Services (AWS).
 
 **Rationale**: Static sites are fun. Deploying to S3 is pure
   joy. CloudFront makes scaling something you don't think about
