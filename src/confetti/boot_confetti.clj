@@ -10,7 +10,7 @@
             [boot.core :as b]))
 
 (def deps '[[camel-snake-kebab "0.3.2"]
-            [confetti/cloudformation "0.1.3"]
+            [confetti/cloudformation "0.1.4"]
             [confetti/s3-deploy "0.1.1"]
             [confetti/confetti "0.1.2-SNAPSHOT"] ; for serialize/report ns
             [com.google.guava/guava "18.0"]])
@@ -58,6 +58,13 @@
   (-> id find-confetti-edn slurp edn/read-string))
 
 ;; ==============================================================================
+
+(defn find-hosted-zone [pod creds domain]
+  (let [drop-dot      (fn [n] (subs n 0 (- (count n) 1)))
+        subdomain-of? (fn [hz]
+                        (let [zone-domain (drop-dot (:name hz))]
+                          (when (and (.endsWith domain zone-domain) (not= domain zone-domain)) hz)))]
+    (some subdomain-of? (:hosted-zones (pod/with-eval-in pod (amazonica.aws.route53/list-hosted-zones ~creds))))))
 
 (defn fetch-nameservers [pod creds hosted-zone-id]
   (let [resp (pod/with-eval-in pod (amazonica.aws.route53/get-hosted-zone ~creds {:id ~hosted-zone-id}))
@@ -115,7 +122,7 @@
               (newline)
               (println "The URL of your Cloudfront distribution is" (:cloudfront-url outputs))
               (println "You can now use it as CNAME value in your DNS records."))
-            ;; Root domain/Route53 case
+            ;; Root domain using Route53 is required. Show nameservers.
             (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
               (newline)
               (u/warn "You're using a root/apex domain. Please note the that your site won't work unless\nyou use Route53's nameservers for your domain.\n"))
@@ -167,12 +174,16 @@
      (assert-exit domain "The :domain option of the create-site task is required!")
      (assert-exit access-key "The :access-key option of the create-site task is required!")
      (assert-exit secret-key "The :secret-key option of the create-site task is required!")
-     (let [cpod (prep-pod (confetti-pod))]
+     (let [cpod  (prep-pod (confetti-pod))
+           creds {:access-key access-key :secret-key secret-key}
+           hz    (find-hosted-zone cpod creds domain)]
        (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
          (assert-exit dns "Root domain setups must enable the :dns option"))
-       (let [creds {:access-key access-key :secret-key secret-key}
-             tpl (pod/with-eval-in cpod
-                   (confetti.cloudformation/template {:dns? ~dns}))
+       (when (:id hz)
+         (u/warn "An existing Route53 HostedZone has been found.\nInstead of creating a new HostedZone a RecordSet\nwill be added to the existing one (%s).\n\n" (:id hz))
+         (u/dbug hz))
+       (let [tpl (pod/with-eval-in cpod
+                   (confetti.cloudformation/template {:dns? ~dns :hosted-zone-id ~(:id hz)}))
              stn (string/replace domain #"\." "-")
              ran (when-not dry-run
                    (pod/with-call-in cpod
