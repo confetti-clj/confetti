@@ -9,7 +9,7 @@
             [boot.core :as b]))
 
 (def deps '[[camel-snake-kebab "0.3.2"]
-            [confetti/cloudformation "0.1.0-SNAPSHOT"]
+            [confetti/cloudformation "0.1.2"]
             [confetti/s3-deploy "0.1.1"]
             [confetti/confetti "0.1.2-SNAPSHOT"] ; for serialize/report ns
             [com.google.guava/guava "18.0"]])
@@ -19,6 +19,7 @@
 
 (defn prep-pod [cpod]
   (pod/with-eval-in cpod
+    (require 'boot.util)
     (require 'confetti.cloudformation)
     (require 'confetti.s3-deploy)
     (require 'confetti.serialize)
@@ -71,21 +72,25 @@
             stn (string/replace domain #"\." "-")
             ran (when-not dry-run
                   (pod/with-call-in cpod
-                    (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))]
+                    (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))
+            fname (str stn ".confetti.edn")]
         (if dry-run
           (pp/pprint tpl)
           (do
            (u/info "Reporting events generated while creating your stack.\n")
            (println "Be aware that creation of CloudFront distributions may take up to 15min.")
+           (println "In case you connection breaks up or it takes longer you can fetch the stack outputs using")
            (newline)
+           (println "    boot fetch-outputs")
+           (newline)
+           (save-outputs (io/file fname) (:stack-id ran) {})
            (pod/with-eval-in cpod
              (confetti.report/report-stack-events
               {:stack-id (:stack-id ~ran)
                :cred ~creds
                :verbose ~verbose
                :report-cb (resolve 'confetti.report/cf-report)}))
-           (let [fname (str stn ".confetti.edn")
-                 outputs (pod/with-eval-in cpod
+           (let [outputs (pod/with-eval-in cpod
                            (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran)))]
              (save-outputs (io/file fname) (:stack-id ran) outputs)
              (newline)
@@ -100,6 +105,30 @@
              (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
              (println "In a future release we will print them here directly :)"))))
        fs))))
+
+(b/deftask fetch-outputs
+  "Download the Cloudformation outputs for all preliminary confetti.edn files in the current directory"
+  [a access-key A  str  "AWS access key to use"
+   s secret-key S  str  "AWS secret key to use"]
+  (b/with-pass-thru _
+    (let [cpod        (prep-pod (confetti-pod))
+          creds       {:access-key access-key :secret-key secret-key}
+          preliminary (->> (System/getProperty "user.dir")
+                           clojure.java.io/file
+                           (.listFiles)
+                           (remove #(.isDirectory %))
+                           (filter #(.endsWith (.getName %) ".confetti.edn"))
+                           (remove (comp :cloudfront-url read-string slurp)))]
+      (doseq [p preliminary]
+        (u/info "Fetching outputs for %s\n" (.getName p))
+        (let [stack-id (-> p slurp read-string :stack-id)
+              outputs  (pod/with-eval-in cpod
+                         (try
+                           (confetti.cloudformation/get-outputs ~creds ~stack-id)
+                           (catch Exception e
+                             (boot.util/fail "%s: %s\n" (.getMessage e) (-> e ex-data :stack-info :stack-status))
+                             (println (ex-data e)))))]
+          (save-outputs p stack-id outputs))))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
