@@ -46,6 +46,14 @@
 (defn save-outputs [file stack-id outputs]
   (->> outputs (merge {:stack-id stack-id}) pp/pprint with-out-str (spit file)))
 
+(defn find-confetti-edn [id]
+  (let [f (io/file (if (.endsWith id ".confetti.edn") id (str id ".confetti.edn")))]
+    (assert-exit (.exists f) (str "The file " (.getName f) " could not be found!"))
+    f))
+
+(defn read-confetti-edn [id]
+  (-> id find-confetti-edn slurp edn/read-string))
+
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and single page apps.
 
