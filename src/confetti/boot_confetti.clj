@@ -98,21 +98,7 @@
               {:stack-id (:stack-id ~ran)
                :cred ~creds
                :verbose ~verbose
-               :report-cb (resolve 'confetti.report/cf-report)}))
-           (let [outputs (process-outputs (pod/with-eval-in cpod
-                                            (confetti.cloudformation/get-outputs ~creds ~(:stack-id ran))))]
-             (save-outputs (io/file fname) (:stack-id ran) outputs)
-             (newline)
-             (print-outputs outputs)
-             (newline)
-             (u/info "These outputs have also been saved to %s\n" fname))
-           (when dns
-             (newline)
-             (u/info "You're using a root domain setup.\n")
-             (println "Make sure your domain is setup to use the nameservers by the Route53 hosted zone.")
-             (println "To look up these nameservers go to: ")
-             (u/info "https://console.aws.amazon.com/route53/home?region=us-east-1#hosted-zones:\n")
-             (println "In a future release we will print them here directly :)"))))
+               :report-cb (resolve 'confetti.report/cf-report)}))))
        fs))))
 
 (defn fetch-nameservers [pod creds hosted-zone-id]
@@ -141,37 +127,40 @@
 
 (b/deftask fetch-outputs
   "Download the Cloudformation outputs for all preliminary confetti.edn files in the current directory"
-  [a access-key A  str  "AWS access key to use"
+  [e confetti-edn PATH str ".confetti.edn to fetch outputs for (needs at least :stack-id)"
+   a access-key A  str  "AWS access key to use"
    s secret-key S  str  "AWS secret key to use"]
   (b/with-pass-thru _
     (let [cpod        (prep-pod (confetti-pod))
           creds       {:access-key access-key :secret-key secret-key}
-          preliminary (->> (System/getProperty "user.dir")
-                           clojure.java.io/file
-                           (.listFiles)
-                           (remove #(.isDirectory %))
-                           (filter #(.endsWith (.getName %) ".confetti.edn"))
-                           (remove (comp :cloudfront-url edn/read-string slurp)))]
+          preliminary (if confetti-edn
+                        [(find-confetti-edn confetti-edn)]
+                        (->> (System/getProperty "user.dir")
+                             clojure.java.io/file
+                             (.listFiles)
+                             (remove #(.isDirectory %))
+                             (filter #(.endsWith (.getName %) ".confetti.edn"))
+                             (remove (comp :cloudfront-url edn/read-string slurp))))]
       (doseq [p preliminary]
         (u/info "Fetching outputs for %s... " (.getName p))
         (let [stack-id    (-> p slurp edn/read-string :stack-id)
               outputs     (-> (fetch-stack-outputs cpod creds stack-id) process-outputs)
               nameservers (when-let [hzid (:hosted-zone-id outputs)]
-                            (fetch-nameservers cpod creds hzid))]
+                            (fetch-nameservers cpod creds hzid))
+              domain      (string/replace (:website-url outputs) #"^http.*:\/\/" "")]
           (when outputs
             (save-outputs p stack-id (merge outputs {:name-servers nameservers}))
             (u/info "done.\n")
+            (newline)
+            (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
+              (u/warn "You're using a root/apex domain. Please note the that your site won't work unless\nyou use Route53's nameservers for your domain.\n"))
+            (newline)
             (when (seq nameservers)
               (report-nameservers nameservers))))))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
         (b/output-files fs)))
-
-(defn read-confetti-edn [id]
-  (let [f (io/file (if (.endsWith id ".confetti.edn") id (str id ".confetti.edn")))]
-    (assert-exit (.exists f) (str "The file " (.getName f) " could not be found!"))
-    (-> f slurp edn/read-string)))
 
 (b/deftask sync-bucket
   "Sync fileset (default & easiest), directory or selected files to S3 bucket.
