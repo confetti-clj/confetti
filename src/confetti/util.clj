@@ -11,6 +11,9 @@
 (defn schedule [fn interval-ms]
   (.scheduleAtFixedRate scheduler fn 0 interval-ms TimeUnit/MILLISECONDS))
 
+(defn after-ms [fn delay-ms]
+  (.schedule scheduler fn delay-ms TimeUnit/MILLISECONDS))
+
 ;; Root domain identification --------------------------------------------------
 
 (defn root-domain? [domain]

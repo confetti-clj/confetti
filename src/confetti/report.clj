@@ -37,24 +37,36 @@
         (deliver done-promise :failure))
       (reduce conj reported events))))
 
+(defn cancel-notice []
+  (newline)
+  (println "Reporting Stack events takes longer than it should, cancelling.")
+  (println "You can always retrieve stack outputs using fetch-outputs."))
+
 (defn report-stack-events
   [{:keys [cred stack-id report-cb] :as args}]
   {:pre  [cred stack-id report-cb]}
   (let [done   (promise)
         report (mk-reporter (assoc args :done-promise done))
-        sched  (util/schedule #(send-off reported report) 300)]
+        sched  (util/schedule #(send-off reported report) 1000)]
+
+    ;; Sometimes this gets stuck for whatever reason, give it a hard limit:
+    (util/after-ms #(deliver done :timeout) (* 16 #_min 60 1000))
+
     ;; TODO if success? -> error handling!
     (case @done
       :success (future-cancel sched)
+      :timeout (do (cancel-notice)
+                   (future-cancel sched))
       :failure (future-cancel sched))))
 
-(def cf-colors {:create-complete ansi/green
-             :create-in-progress ansi/yellow
-             :create-failed ansi/red
-             :rollback-in-progress ansi/yellow
-             :delete-complete ansi/green
-             :delete-in-progress ansi/yellow
-             :rollback-complete ansi/green})
+(def cf-colors
+  {:create-complete ansi/green
+   :create-in-progress ansi/yellow
+   :create-failed ansi/red
+   :rollback-in-progress ansi/yellow
+   :delete-complete ansi/green
+   :delete-in-progress ansi/yellow
+   :rollback-complete ansi/green})
 
 (defn cf-report [ev]
   (let [type  (-> ev :resource-status case/->kebab-case-keyword)
