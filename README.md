@@ -155,6 +155,15 @@ Also feel free to open issues to ask questions or suggest improvements.
   (ending with `.confetti.edn` and just the part before that). Previously
   it was expected that you only supply the part before the `.confetti.edn` suffix
 - Adapt Readme to suggest usage of `confetti-edn` option and `fetch-outputs` task
+- Refactor reporting into separate task that is called from `create-site`
+- Give progress-reporting a hard limit of 16min. Previously the error reporting often
+  got stuck preventing the entire process from returning. This should not happen anymore.
+- Provide copy-able command to fetch outputs as part of progress reporting
+- Move APEX domain info into `fetch-outputs` task
+- Upgrade to `[confetti/cloudformation "0.1.3"]` to have `:website-url` in stack outputs
+  no matter if Route53 is used or not
+- Print time when starting progress reporting
+- Print Cloudfront URL in `fetch-outputs` if Route53 isn't used
 
 #### 0.1.3
 
