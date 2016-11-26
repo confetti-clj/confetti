@@ -151,8 +151,13 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 #### unreleased
 
-- HostedZones cost 50c each so it would be nice to use an existing HostedZone for `example.com`
-  when creating a site at `demo.example.com`. This is now being done. A message is printed.
+- **HostedZone Reuse:** Creating a new HostedZone for each site has two drawbacks:
+  - Each HostedZone costs 50 cent
+  - Each HostedZone has a distinct set of nameservers that you'd need to supply to your domain provider
+
+  By using one HostedZone for your root domain `example.com` these problems are solved and
+  adding a new site at `demo.example.com` is just a matter of adding a RecordSet.
+  **Confetti now tries to find an existing HostedZone and only adds a RecordSet if it finds one.**
 
 #### 0.1.4
 
