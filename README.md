@@ -151,7 +151,8 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 #### unreleased
 
-- TODO :)
+- HostedZones cost 50c each so it would be nice to use an existing HostedZone for `example.com`
+  when creating a site at `demo.example.com`. This is now being done. A message is printed.
 
 #### 0.1.4
 
