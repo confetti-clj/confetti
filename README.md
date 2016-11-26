@@ -13,7 +13,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.3"] ;; latest release
+[confetti/confetti "0.1.4"] ;; latest release
 ```
 [](/dependency)
 
@@ -150,6 +150,10 @@ Also feel free to open issues to ask questions or suggest improvements.
 ## Changes
 
 #### unreleased
+
+- TODO :)
+
+#### 0.1.4
 
 - When users supply the `confetti-edn` option, we now accept both versions
   (ending with `.confetti.edn` and just the part before that). Previously
