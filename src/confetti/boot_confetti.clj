@@ -82,7 +82,7 @@
            (println "Be aware that creation of CloudFront distributions may take up to 15min.")
            (println "In case you connection breaks up or it takes longer you can fetch the stack outputs using")
            (newline)
-           (println "    boot fetch-outputs")
+           (println "    boot fetch-outputs --access-key abc --secret-key xyz")
            (newline)
            (save-outputs (io/file fname) (:stack-id ran) {})
            (pod/with-eval-in cpod
