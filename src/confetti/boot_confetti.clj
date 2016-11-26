@@ -113,6 +113,31 @@
             (when (seq nameservers)
               (report-nameservers nameservers))))))))
 
+(b/deftask report-progress
+  "Report progress on the creation of a stack (specified via a .confetti.edn)"
+  [e confetti-edn PATH str ".confetti.edn to take :stack-id from"
+   v verbose       bool "Print all events in full"
+   a access-key A  str  "AWS access key to use"
+   s secret-key S  str  "AWS secret key to use"]
+  (b/with-pass-thru _
+    (assert-exit access-key "The :access-key option of the create-site task is required!")
+    (assert-exit secret-key "The :secret-key option of the create-site task is required!")
+    (let [cpod (prep-pod (confetti-pod))
+          cedn (read-confetti-edn confetti-edn)
+          creds {:access-key access-key :secret-key secret-key}]
+      (u/info "Reporting events generated while creating your stack.\n")
+      (println "Be aware that creation of CloudFront distributions may take up to 15min.")
+      (println "In case you connection breaks, this process fails or you just need the terminal for something else you can run the following later:")
+      (newline)
+      (println "    boot fetch-outputs --access-key " access-key " --secret-key " secret-key " --confetti-edn " confetti-edn)
+      (newline)
+      (pod/with-eval-in cpod
+        (confetti.report/report-stack-events
+         {:stack-id ~(:stack-id cedn)
+          :cred ~creds
+          :verbose ~verbose
+          :report-cb (resolve 'confetti.report/cf-report)})))))
+
 (b/deftask create-site
   "Create all resources for ideal deployment of static sites and single page apps.
 
@@ -128,7 +153,7 @@
    d domain DOMAIN str  "Domain of the future site (without protocol)"
    r dry-run       bool "Only print to be ran template, don't run it"]
   (comp
-   (b/with-pre-wrap fs
+   (b/with-pass-thru _
      (assert-exit domain "The :domain option of the create-site task is required!")
      (assert-exit access-key "The :access-key option of the create-site task is required!")
      (assert-exit secret-key "The :secret-key option of the create-site task is required!")
@@ -145,22 +170,12 @@
              fname (str stn ".confetti.edn")]
          (if dry-run
            (pp/pprint tpl)
-           (do
-             (u/info "Reporting events generated while creating your stack.\n")
-             (println "Be aware that creation of CloudFront distributions may take up to 15min.")
-             (println "In case you connection breaks up or it takes longer you can fetch the stack outputs using")
-             (newline)
-             (println "    boot fetch-outputs --access-key abc --secret-key xyz")
-             (newline)
-             (save-outputs (io/file fname) (:stack-id ran) {})
-             (pod/with-eval-in cpod
-               (confetti.report/report-stack-events
-                {:stack-id (:stack-id ~ran)
-                 :cred ~creds
-                 :verbose ~verbose
-                 :report-cb (resolve 'confetti.report/cf-report)}))))
-         fs)))
-   (fetch-outputs :confetti-edn (string/replace domain #"\." "-"))))
+           (save-outputs (io/file fname) (:stack-id ran) {})))))
+   (report-progress :confetti-edn (string/replace domain #"\." "-")
+                    :access-key access-key :secret-key secret-key
+                    :verbose verbose)
+   (fetch-outputs :confetti-edn (string/replace domain #"\." "-")
+                  :access-key access-key :secret-key secret-key)))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
