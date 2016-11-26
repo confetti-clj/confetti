@@ -97,11 +97,13 @@ echo "About Us" > my-app-site/about.html
 ```
 
 Now lets sync it. Take the `bucket-name`, `access-key` and
-`secret-key` values from the *.edn* file:
+`secret-key` values from the *.confetti.edn* file:
 
 ```
 boot -d confetti sync-bucket --bucket "my-app-com-sitebucket-3fu0w0729ndk" \
                              --access-key AAA --secret-key BBB --dir my-app-site
+;; or alternatively
+boot -d confetti sync-bucket --confetti-edn your-site.confetti.edn --dir my-app-site
 ```
 
 This will upload `index.html` and `about.html` to your bucket. To
@@ -144,6 +146,13 @@ boot sync-bucket --help
 Also feel free to open issues to ask questions or suggest improvements.
 
 ## Changes
+
+#### unreleased
+
+- When users supply the `confetti-edn` option, we now accept both versions
+  (ending with `.confetti.edn` and just the part before that). Previously
+  it was expected that you only supply the part before the `.confetti.edn` suffix
+- Adapt Readme to suggest usage of `confetti-edn` option and `fetch-outputs` task
 
 #### 0.1.3
 
