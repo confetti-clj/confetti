@@ -19,9 +19,14 @@
 
 ;; Reporting Cloudformation ----------------------------------------------------
 
-(def reported (agent #{} :error-handler (fn [a e]
-                                          (set-error-mode! a :fail)
-                                          (strace/print-stack-trace e))))
+(def reported
+  (agent #{}
+         :error-handler (fn [a e]
+                          (println "There was a problem fetch Stack events from AWS. (" (class e) ")")
+                          (println "If it persists, you may cancel this process and use `fetch-outputs` later")
+                          #_(if (instance? com.amazonaws.AmazonClientException e)
+                            (println "There was a problem communicating with AWS.")
+                            (strace/print-stack-trace e)))))
 
 (defn mk-reporter
   [{:keys [cred stack-id report-cb done-promise]}]
