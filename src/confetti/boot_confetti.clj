@@ -34,7 +34,7 @@
      (doseq [msg msgs]
        (u/fail (str msg "\n\n"))))))
 
-(defn human-time [] ; utter hack I guess...
+(defn human-time [] ; utter hack ...
   (format "%02d:%02d" (.getHours (java.util.Date.)) (.getMinutes (java.util.Date.))))
 
 (defn print-outputs [outs]
@@ -108,7 +108,7 @@
                             (fetch-nameservers cpod creds hzid))
               domain      (string/replace (:website-url outputs) #"^http.*:\/\/" "")]
           (when outputs
-            (save-outputs p stack-id (cond-> outputs name-servers (assoc :name-servers nameservers)))
+            (save-outputs p stack-id (cond-> outputs nameservers (assoc :name-servers nameservers)))
             (u/info "saved.\n")
             ;; Route53 not used, user probably wants to point some CNAME to the Cloudfront distribution
             (when-not (seq nameservers)
@@ -130,8 +130,8 @@
    a access-key A  str  "AWS access key to use"
    s secret-key S  str  "AWS secret key to use"]
   (b/with-pass-thru _
-    (assert-exit access-key "The :access-key option of the create-site task is required!")
-    (assert-exit secret-key "The :secret-key option of the create-site task is required!")
+    (assert-exit access-key "The :access-key option of the report-progress task is required!")
+    (assert-exit secret-key "The :secret-key option of the report-progress task is required!")
     (let [cpod (prep-pod (confetti-pod))
           cedn (read-confetti-edn confetti-edn)
           creds {:access-key access-key :secret-key secret-key}]
