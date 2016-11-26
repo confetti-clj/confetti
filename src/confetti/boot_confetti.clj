@@ -54,52 +54,7 @@
 (defn read-confetti-edn [id]
   (-> id find-confetti-edn slurp edn/read-string))
 
-(b/deftask create-site
-  "Create all resources for ideal deployment of static sites and single page apps.
-
-   The domain your site should be reached under should be passed via the `domain`
-   option. The `access-key` and `secret-key` options should contain valid AWS creds.
-
-   If you are supplying a root/APEX domain enabling the DNS management via Route53
-   is required (more information in the README)."
-  [n dns           bool "Handle DNS? (i.e. create Route53 Hosted Zone)"
-   a access-key A  str  "AWS access key to use"
-   s secret-key S  str  "AWS secret key to use"
-   v verbose       bool "Print all events in full during creation"
-   d domain DOMAIN str  "Domain of the future site (without protocol)"
-   r dry-run       bool "Only print to be ran template, don't run it"]
-  (b/with-pre-wrap fs
-    (assert-exit domain "The :domain option of the create-site task is required!")
-    (assert-exit access-key "The :access-key option of the create-site task is required!")
-    (assert-exit secret-key "The :secret-key option of the create-site task is required!")
-    (let [cpod (prep-pod (confetti-pod))]
-      (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
-        (assert-exit dns "Root domain setups must enable the :dns option"))
-      (let [creds {:access-key access-key :secret-key secret-key}
-            tpl (pod/with-eval-in cpod
-                  (confetti.cloudformation/template {:dns? ~dns}))
-            stn (string/replace domain #"\." "-")
-            ran (when-not dry-run
-                  (pod/with-call-in cpod
-                    (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))
-            fname (str stn ".confetti.edn")]
-        (if dry-run
-          (pp/pprint tpl)
-          (do
-           (u/info "Reporting events generated while creating your stack.\n")
-           (println "Be aware that creation of CloudFront distributions may take up to 15min.")
-           (println "In case you connection breaks up or it takes longer you can fetch the stack outputs using")
-           (newline)
-           (println "    boot fetch-outputs --access-key abc --secret-key xyz")
-           (newline)
-           (save-outputs (io/file fname) (:stack-id ran) {})
-           (pod/with-eval-in cpod
-             (confetti.report/report-stack-events
-              {:stack-id (:stack-id ~ran)
-               :cred ~creds
-               :verbose ~verbose
-               :report-cb (resolve 'confetti.report/cf-report)}))))
-       fs))))
+;; ==============================================================================
 
 (defn fetch-nameservers [pod creds hosted-zone-id]
   (let [resp (pod/with-eval-in pod (amazonica.aws.route53/get-hosted-zone ~creds {:id ~hosted-zone-id}))
@@ -150,13 +105,62 @@
               domain      (string/replace (:website-url outputs) #"^http.*:\/\/" "")]
           (when outputs
             (save-outputs p stack-id (merge outputs {:name-servers nameservers}))
-            (u/info "done.\n")
+            (u/info "saved.\n")
             (newline)
             (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
               (u/warn "You're using a root/apex domain. Please note the that your site won't work unless\nyou use Route53's nameservers for your domain.\n"))
             (newline)
             (when (seq nameservers)
               (report-nameservers nameservers))))))))
+
+(b/deftask create-site
+  "Create all resources for ideal deployment of static sites and single page apps.
+
+   The domain your site should be reached under should be passed via the `domain`
+   option. The `access-key` and `secret-key` options should contain valid AWS creds.
+
+   If you are supplying a root/APEX domain enabling the DNS management via Route53
+   is required (more information in the README)."
+  [n dns           bool "Handle DNS? (i.e. create Route53 Hosted Zone)"
+   a access-key A  str  "AWS access key to use"
+   s secret-key S  str  "AWS secret key to use"
+   v verbose       bool "Print all events in full during creation"
+   d domain DOMAIN str  "Domain of the future site (without protocol)"
+   r dry-run       bool "Only print to be ran template, don't run it"]
+  (comp
+   (b/with-pre-wrap fs
+     (assert-exit domain "The :domain option of the create-site task is required!")
+     (assert-exit access-key "The :access-key option of the create-site task is required!")
+     (assert-exit secret-key "The :secret-key option of the create-site task is required!")
+     (let [cpod (prep-pod (confetti-pod))]
+       (when (pod/with-call-in cpod (confetti.util/root-domain? ~domain))
+         (assert-exit dns "Root domain setups must enable the :dns option"))
+       (let [creds {:access-key access-key :secret-key secret-key}
+             tpl (pod/with-eval-in cpod
+                   (confetti.cloudformation/template {:dns? ~dns}))
+             stn (string/replace domain #"\." "-")
+             ran (when-not dry-run
+                   (pod/with-call-in cpod
+                     (confetti.cloudformation/run-template ~creds ~stn ~tpl {:user-domain ~domain})))
+             fname (str stn ".confetti.edn")]
+         (if dry-run
+           (pp/pprint tpl)
+           (do
+             (u/info "Reporting events generated while creating your stack.\n")
+             (println "Be aware that creation of CloudFront distributions may take up to 15min.")
+             (println "In case you connection breaks up or it takes longer you can fetch the stack outputs using")
+             (newline)
+             (println "    boot fetch-outputs --access-key abc --secret-key xyz")
+             (newline)
+             (save-outputs (io/file fname) (:stack-id ran) {})
+             (pod/with-eval-in cpod
+               (confetti.report/report-stack-events
+                {:stack-id (:stack-id ~ran)
+                 :cred ~creds
+                 :verbose ~verbose
+                 :report-cb (resolve 'confetti.report/cf-report)}))))
+         fs)))
+   (fetch-outputs :confetti-edn (string/replace domain #"\." "-"))))
 
 (defn ^:private fileset->file-maps [fs]
   (mapv (fn [tf] {:s3-key (:path tf) :file (b/tmp-file tf)})
