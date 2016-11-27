@@ -224,16 +224,17 @@
    - `dry-run` will cause all S3 related side effects to be skipped
    - `prune` will cause S3 objects which are not supplied as file-maps to be
      deleted from the target S3 bucket"
-  [e confetti-edn   PATH   str  "The name of a .confetti.edn file in the current working directory"
-   b bucket         BUCKET str  "Name of S3 bucket to push files to"
-   a access-key     ACCESS str  "AWS access key to use"
-   s secret-key     SECRET str  "AWS secret key to use"
-   d dir            DIR    str  "Directory to sync as is"
-   m file-maps      MAPS   edn  "EDN description of files to upload"
-   f file-maps-path PATH   str  "Path to file w/ EDN description of files to upload (file must be in fileset)"
-   y dry-run               bool "Report as usual but don't actually do anything"
-   p prune                 bool "Delete files from S3 bucket not in fileset/dir"
-   c cloudfront-id  DIST   str  "CloudFront Distribution ID to create invalidation (optional)"]
+  [e confetti-edn       PATH   str   "The name of a .confetti.edn file in the current working directory"
+   b bucket             BUCKET str   "Name of S3 bucket to push files to"
+   a access-key         ACCESS str   "AWS access key to use"
+   s secret-key         SECRET str   "AWS secret key to use"
+   d dir                DIR    str   "Directory to sync as is"
+   m file-maps          MAPS   edn   "EDN description of files to upload"
+   f file-maps-path     PATH   str   "Path to file w/ EDN description of files to upload (file must be in fileset)"
+   y dry-run                   bool  "Report as usual but don't actually do anything"
+   p prune                     bool  "Delete files from S3 bucket not in fileset/dir"
+   i invalidation-paths PATHS  [str] "A list of invalidation paths for CloudFront. Replaces the list of changed files"
+   c cloudfront-id      DIST   str   "CloudFront Distribution ID to create invalidation (optional)"]
   (b/with-pre-wrap fs
     (let [cedn (read-confetti-edn confetti-edn)]
       ;; Various checking / error handling
@@ -279,7 +280,7 @@
         (let [{:keys [uploaded updated unchanged deleted]} results]
           (when (< 0 (max (count uploaded) (count updated) (count deleted)))
             (newline))
-          (let [paths (mapv #(str "/" %) (concat uploaded updated deleted))]
+          (let [paths (or invalidation-paths (mapv #(str "/" %) (concat uploaded updated deleted)))]
             (when (and cf-id (seq paths) (not dry-run))
               (u/info "Creating CloudFront invalidation for %s paths.\n" (count paths))
               (u/dbug "Paths: %s\n" (pr-str paths))
