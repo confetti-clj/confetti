@@ -158,6 +158,8 @@ Also feel free to open issues to ask questions or suggest improvements.
   By using one HostedZone for your root domain `example.com` these problems are solved and
   adding a new site at `demo.example.com` is just a matter of adding a RecordSet.
   **Confetti now tries to find an existing HostedZone and only adds a RecordSet if it finds one.**
+- New `invalidation-paths` option for the `sync-bucket` task. Previously invalidation paths
+  were determined based on the files you uploaded. Now you can provide a custom set. ([#21](https://github.com/confetti-clj/confetti/issues/21) + [#29](https://github.com/confetti-clj/confetti/pull/29))
 
 #### 0.1.4
 
