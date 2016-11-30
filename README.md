@@ -17,6 +17,15 @@
 ```
 [](/dependency)
 
+## Who is this for? 
+
+- People that want static sites on custom domains with free SSL and minimal hassle.
+- People that want to host static sites under root domains (e.g. example.com).
+- People that want to setup new static sites often without much manual work.
+- People that want to effortlessly have multiple static sites under one domain (e.g. demo.example.com and example.com)
+- People that want excellent distribution accross the globe using a leading CDN.
+- People that want to be able to delete all resources related to a site with a single click.
+
 ## Features
 
 - Create all AWS resources required for ideal deployment of static sites
