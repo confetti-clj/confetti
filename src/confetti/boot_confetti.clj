@@ -236,7 +236,7 @@
    i invalidation-paths PATHS  [str] "A list of invalidation paths for CloudFront. Replaces the list of changed files"
    c cloudfront-id      DIST   str   "CloudFront Distribution ID to create invalidation (optional)"]
   (b/with-pre-wrap fs
-    (let [cedn (read-confetti-edn confetti-edn)]
+    (let [cedn (when confetti-edn (read-confetti-edn confetti-edn))]
       ;; Various checking / error handling
       (if confetti-edn
         (do
