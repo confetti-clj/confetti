@@ -17,11 +17,11 @@
 ```
 [](/dependency)
 
-## Who is this for? 
+## Who is this for?
 
 - People that want static sites on custom domains with free SSL and minimal hassle.
 - People that want to host static sites under root domains (e.g. example.com).
-- People that want to setup new static sites often without much manual work.
+- People that want to setup new static sites often without much manual work (takes 15min of mostly waiting w/ Confetti).
 - People that want to effortlessly have multiple static sites under one domain (e.g. demo.example.com and example.com)
 - People that want excellent distribution accross the globe using a leading CDN.
 - People that want to be able to delete all resources related to a site with a single click.
@@ -31,8 +31,9 @@
 - Create all AWS resources required for ideal deployment of static sites
   - S3 Bucket, Bucket Policy, Cloudfront Distribution
 - Provide a separate user & access key that can only push to the bucket
-- *(optional)* Setup DNS via Route 53
+- Setup DNS via Route 53 *(optional)*
 - Follow [AWS best practices for deploying static sites][aws-website-hosting].
+- Efficient synchronization of files to S3.
 
 ## Usage
 
@@ -169,6 +170,7 @@ Also feel free to open issues to ask questions or suggest improvements.
   **Confetti now tries to find an existing HostedZone and only adds a RecordSet if it finds one.**
 - New `invalidation-paths` option for the `sync-bucket` task. Previously invalidation paths
   were determined based on the files you uploaded. Now you can provide a custom set. ([#21](https://github.com/confetti-clj/confetti/issues/21) + [#29](https://github.com/confetti-clj/confetti/pull/29))
+- Fix bug with new method of supplying options via a `.confetti.edn` file
 
 #### 0.1.4
 
