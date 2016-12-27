@@ -204,14 +204,16 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 #### Additional Tweaks
 
-- Add SSL:
-  - Get an SSL Cert using AWS Certificate Manager (ACM)
-  - Configure Cloudfront Distribution to use newly issued certificate (i.e. "Custom SSL certificate")
-  - Switch **Origin** Protocol Policy to "HTTP Only" (This setting can no longer be changed manually but Cloudfront defaults to the right setting if the Origin is an S3 Website endpoint.)
-  - Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
+##### Add SSL:
 
-- Enable Gzipping
-  - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
+1. Get an SSL Cert using AWS Certificate Manager (ACM)
+1. Configure Cloudfront Distribution to use newly issued certificate (i.e. "Custom SSL certificate")
+1. Switch **Origin** Protocol Policy to "HTTP Only" (This setting can no longer be changed manually but Cloudfront defaults to the right setting if the Origin is an S3 Website endpoint.)
+1. Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
+
+##### Enable Gzipping
+
+- Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
 
 #### Future Improvements
 
