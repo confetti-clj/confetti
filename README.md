@@ -206,7 +206,8 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 - Add SSL:
   - Get an SSL Cert using AWS Certificate Manager (ACM)
-  - Switch **Origin** Protocol Policy to "HTTP Only"
+  - Configure Cloudfront Distribution to use newly issued certificate (i.e. "Custom SSL certificate")
+  - Switch **Origin** Protocol Policy to "HTTP Only" (This setting can no longer be changed manually but Cloudfront defaults to the right setting if the Origin is an S3 Website endpoint.)
   - Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
 
 - Enable Gzipping
