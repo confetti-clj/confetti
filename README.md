@@ -13,7 +13,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.4"] ;; latest release
+[confetti/confetti "0.1.5-alpha"] ;; latest release
 ```
 [](/dependency)
 
@@ -159,8 +159,8 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 ## Changes
 
-#### unreleased
-
+#### 0.1.5-alpha
+    
 - **HostedZone Reuse:** Creating a new HostedZone for each site has two drawbacks:
   - Each HostedZone costs 50 cent
   - Each HostedZone has a distinct set of nameservers that you'd need to supply to your domain provider
