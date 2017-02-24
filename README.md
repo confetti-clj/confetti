@@ -13,7 +13,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.5-alpha"] ;; latest release
+[confetti/confetti "0.1.5"] ;; latest release
 ```
 [](/dependency)
 
@@ -158,6 +158,10 @@ boot sync-bucket --help
 Also feel free to open issues to ask questions or suggest improvements.
 
 ## Changes
+
+#### 0.1.5
+
+- bump [`confetti/s3-deploy`](https://github.com/confetti-clj/s3-deploy) to improve Windows compatibility
 
 #### 0.1.5-alpha
     
