@@ -215,6 +215,11 @@ Also feel free to open issues to ask questions or suggest improvements.
 1. Switch **Origin** Protocol Policy to "HTTP Only" (This setting can no longer be changed manually but Cloudfront defaults to the right setting if the Origin is an S3 Website endpoint.)
 1. Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
 
+> **Note** If you end up getting 504 errors when requesting assets
+> from your Cloudfront distribution double check you're really using
+> the website endpoint as origin. The Origin Protocol policy **must
+> be** "HTTP Only" as a result of using the website endpoint.
+
 ##### Enable Gzipping
 
 - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
