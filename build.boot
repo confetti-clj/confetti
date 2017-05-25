@@ -7,7 +7,7 @@
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
          '[confetti.boot-confetti :refer [create-site report-progress fetch-outputs sync-bucket]])
 
-(def +version+ "0.1.5")
+(def +version+ "0.2.0")
 (bootlaces! +version+)
 
 (def creds

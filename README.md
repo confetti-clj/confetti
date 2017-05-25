@@ -13,7 +13,7 @@
 
 [](dependency)
 ```clojure
-[confetti/confetti "0.1.5"] ;; latest release
+[confetti/confetti "0.2.0"] ;; latest release
 ```
 [](/dependency)
 
@@ -36,6 +36,8 @@
 - Efficient synchronization of files to S3.
 
 ## Usage
+
+[creating a site](#creating-a-site) | [syncing your site](#syncing-your-site) | [final step: dns](#final-step-dns) | [adding subdomains](#adding-subdomains)
 
 > Confetti is packaged up as a [boot][boot] task. This is mainly because
 > boot makes it easy to write commandline apps in Clojure without needing
@@ -145,6 +147,22 @@ to the Cloudfront distribution.
 > registrar so it's recommended to check their individual
 > documentation.
 
+### Adding Subdomains
+
+Let's say you used Confetti to create a site `weloveparens.com` and
+now want to add a static site to a subdomain of that domain. You can just run:
+
+```
+boot create-site --domain "shop.weloveparens.com" --dns --access-key FOO --secret-key BAR
+```
+
+This will create a Route53 RecordSet in the HostedZone which has
+previously been created for you when setting up `weloveparens.com`.
+The S3 bucket, CloudFront distribution and so on will be created as usual.
+Also as always everything (including the RecordSet) will be created as
+a CloudFormation stack so if you no longer need it you can just delete
+the stack, leaving `weloveparens.com` unaffected.
+
 ## Getting Help
 
 To get help on the command line you can always run:
@@ -159,12 +177,18 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 ## Changes
 
+#### 0.2.0
+
+- Upgrade to `[confetti/cloudformation "0.1.6"]`, which brings the following improvements:
+  - Enable compression by default
+  - Fix some misconfiguration of the origin that caused problems when enabling SSL
+
 #### 0.1.5
 
 - bump [`confetti/s3-deploy`](https://github.com/confetti-clj/s3-deploy) to improve Windows compatibility
 
 #### 0.1.5-alpha
-    
+
 - **HostedZone Reuse:** Creating a new HostedZone for each site has two drawbacks:
   - Each HostedZone costs 50 cent
   - Each HostedZone has a distinct set of nameservers that you'd need to supply to your domain provider
@@ -212,8 +236,9 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 1. Get an SSL Cert using AWS Certificate Manager (ACM)
 1. Configure Cloudfront Distribution to use newly issued certificate (i.e. "Custom SSL certificate")
-1. Switch **Origin** Protocol Policy to "HTTP Only" (This setting can no longer be changed manually but Cloudfront defaults to the right setting if the Origin is an S3 Website endpoint.)
 1. Switch **Behavior** Viewer Protocol Policy to "Redirect HTTP to HTTPS"
+
+👉 If anything is not working as expected, please open an issue. 👈
 
 > **Note** If you end up getting 504 errors when requesting assets
 > from your Cloudfront distribution double check you're really using
@@ -222,12 +247,11 @@ Also feel free to open issues to ask questions or suggest improvements.
 
 ##### Enable Gzipping
 
+- **v0.1.6 and up now take care of this automatically**
 - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
 
 #### Future Improvements
 
-- When creating a static site on a subdomain of a domain that is already managed via Route53
-  it would make sense to add the Record Set to the existing Hosted Zone. ([#17](https://github.com/confetti-clj/confetti/issues/17))
 - In the future Confetti could and should support SSL as well.
   [Let's Encrypt][lets-encrypt] is no longer in beta and as soon as there is
   a usable Clojure/Java client it would be nice to make it "dead-simple" to
