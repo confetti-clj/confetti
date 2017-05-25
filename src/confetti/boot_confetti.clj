@@ -10,9 +10,9 @@
             [boot.core :as b]))
 
 (def deps '[[camel-snake-kebab "0.3.2"]
-            [confetti/cloudformation "0.1.4"]
+            [confetti/cloudformation "0.1.6"]
             [confetti/s3-deploy "0.1.1"]
-            [confetti/confetti "0.1.2-SNAPSHOT"] ; for serialize/report ns
+            [confetti/confetti "0.2.0"] ; for serialize/report ns
             [com.google.guava/guava "18.0"]])
 
 (defn confetti-pod []
