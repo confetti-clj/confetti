@@ -49,6 +49,12 @@
 (defn save-outputs [file stack-id outputs]
   (->> outputs (merge {:stack-id stack-id}) pp/pprint with-out-str (spit file)))
 
+(defn envrc-contents [outputs]
+  (->> outputs
+       (map (fn [[k v]]
+              (str "\texport " (-> k name (string/upper-case) (string/replace "-" "_")) "=" v)))
+       (string/join "\n")))
+
 (defn find-confetti-edn [id]
   (let [f (io/file (if (.endsWith id ".confetti.edn") id (str id ".confetti.edn")))]
     (assert-exit (.exists f) (str "The file " (.getName f) " could not be found!"))
@@ -87,7 +93,7 @@
   (println "(You may now want to set these as nameservers in your domain management console.)")
   (newline)
   (doseq [ns nameservers]
-    (println "    " ns))
+    (println "\t" ns))
   (newline))
 
 (b/deftask fetch-outputs
@@ -107,7 +113,7 @@
                              (filter #(.endsWith (.getName %) ".confetti.edn"))
                              (remove (comp :cloudfront-url edn/read-string slurp))))]
       (doseq [p preliminary]
-        (u/info "Fetching outputs for %s... " (.getName p))
+        (u/info "Fetching outputs for %s...\n" (.getName p))
         ;; TODO implement complete? check and skip fetching if so
         (let [stack-id    (-> p slurp edn/read-string :stack-id)
               outputs     (-> (fetch-stack-outputs cpod creds stack-id) process-outputs)
@@ -115,8 +121,13 @@
                             (fetch-nameservers cpod creds hzid))
               domain      (string/replace (:website-url outputs) #"^http.*:\/\/" "")]
           (when outputs
-            (save-outputs p stack-id (cond-> outputs nameservers (assoc :name-servers nameservers)))
-            (u/info "saved.\n")
+            (u/info "Here are all important things about your new site, suitable to be used with direnv\n")
+            (println "(To learn more about direnv: https://github.com/direnv/direnv)")
+            (newline)
+            (println (envrc-contents outputs))
+            ;; (.delete p)
+            ;; (save-outputs p stack-id (cond-> outputs nameservers (assoc :name-servers nameservers)))
+            ;; (u/info "saved.\n")
             ;; Route53 not used, user probably wants to point some CNAME to the Cloudfront distribution
             (when-not (seq nameservers)
               (newline)
