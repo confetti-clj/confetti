@@ -163,6 +163,10 @@ Also as always everything (including the RecordSet) will be created as
 a CloudFormation stack so if you no longer need it you can just delete
 the stack, leaving `weloveparens.com` unaffected.
 
+For the common case of adding a `www` subdomain, you then only need to set the
+"Static website hosting" property of the S3 bucket to "Redirect requests" toward
+the root domain (`www.weloveparens.com` to `weloveparens.com`).
+
 ## Getting Help
 
 To get help on the command line you can always run:
