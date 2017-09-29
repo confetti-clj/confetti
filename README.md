@@ -30,6 +30,9 @@
 
 - Create all AWS resources required for ideal deployment of static sites
   - S3 Bucket, Bucket Policy, Cloudfront Distribution
+- All resources are created via a CloudFormation template, allowing
+  - easy deletion if something went wrong
+  - abort upon conflicting configration
 - Provide a separate user & access key that can only push to the bucket
 - Setup DNS via Route 53 *(optional)*
 - Follow [AWS best practices for deploying static sites][aws-website-hosting].
