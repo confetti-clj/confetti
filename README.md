@@ -253,14 +253,7 @@ Also feel free to open issues to ask questions or suggest improvements.
 - **v0.1.6 and up now take care of this automatically**
 - Edit **Behavior**, set "Compress Objects Automatically" to "Yes"
 
-#### Future Improvements
-
-- In the future Confetti could and should support SSL as well.
-  [Let's Encrypt][lets-encrypt] is no longer in beta and as soon as there is
-  a usable Clojure/Java client it would be nice to make it "dead-simple" to
-  deploy static sites with SSL.
-
-#### APEX Domains
+#### A Note On APEX Domains
 
 Cloudfront supports APEX domains but only if you use Route53's `ALIAS`
 records. More information can be found in the
