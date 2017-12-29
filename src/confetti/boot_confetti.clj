@@ -9,9 +9,9 @@
             [boot.util :as u]
             [boot.core :as b]))
 
-(def deps '[[camel-snake-kebab "0.3.2"]
+(def deps '[[camel-snake-kebab "0.4.0"]
             [confetti/cloudformation "0.1.6"]
-            [confetti/s3-deploy "0.1.1"]
+            [confetti/s3-deploy "0.1.2"]
             [confetti/confetti "0.2.0"] ; for serialize/report ns
             [com.google.guava/guava "18.0"]])
 

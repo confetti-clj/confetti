@@ -1,7 +1,7 @@
 (set-env!
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]
-                 [amazonica/amazonica "0.3.33" :scope "test"]
+                 [amazonica/amazonica "0.3.117" :scope "test"]
                  [com.google.guava/guava "18.0" :scope "test"]])
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
