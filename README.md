@@ -186,7 +186,7 @@ Giving your AWS keys to some program and just letting it run with it is kind of 
 
 - The `create-site` task will create a CloudFormation stack according to a template defined in [confetti-clj/cloudformation](https://github.com/confetti-clj/cloudformation).
 - If you want to see the CloudFormation template before you run anything you can pass the `--dry-run` argument.
-- The credentials you pass to `create-site` must have permissions to create the individual resources listed in the CloudFormation template. (In the future Confetti may provide an AWS permissions snippet so you can create a user that has all the rights Confetti needs.)
+- The credentials you pass to `create-site` must have permissions to create the individual resources listed in the CloudFormation template. (In the future Confetti may provide an AWS IAM policy snippet so you can create a user that has all the rights Confetti needs.)
 - The CloudFormation template will also generate an Access Key + Secret. This keypair is restricted, it can only access the S3 Bucket and invalidate CloudFront caches.
 - The keypair should be sufficient to update your static site and restricted enough that you can share it with others.
 
