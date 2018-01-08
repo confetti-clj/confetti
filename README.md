@@ -54,6 +54,8 @@ Let's go through an example of creating a site and syncing it for the first time
 
 ### Creating a site
 
+> 💡 Confused about access keys? Check out the [Security](#security) section of this README.
+
 Let's say you want to deploy a site at `my-app.com`. To create an S3 bucket, a CloudFront
 distribution and restricted access keys you can run the following:
 
@@ -61,8 +63,6 @@ distribution and restricted access keys you can run the following:
 boot -d confetti create-site --domain "my-app.com" --access-key XXX --secret-key YYY
 ```
 > Note: the `-d confetti` bit makes sure Boot will download confetti so the `create-site` task will be available.
-
-> 💡 Confused about access keys? Check out the [Security](#security) section of this README.
 
 **Exception!** Because you want to use a naked/APEX domain you have to use Route53
 for DNS. (You can find more on this in the Appendix.) Try again with DNS enabled:
