@@ -1,6 +1,6 @@
 ![confetti-logo-small](https://cloud.githubusercontent.com/assets/97496/11431670/0ef1bb58-949d-11e5-83f7-d07cf1dd89c7.png)
 
-[usage](#usage) | [change log](#changes) | [appendix](#appendix)
+[usage](#usage) | [security](#security) | [change log](#changes) | [appendix](#appendix)
 
 **(alpha)** A tool to help authoring static sites with Amazon Web Services (AWS).
 
@@ -61,6 +61,8 @@ distribution and restricted access keys you can run the following:
 boot -d confetti create-site --domain "my-app.com" --access-key XXX --secret-key YYY
 ```
 > Note: the `-d confetti` bit makes sure Boot will download confetti so the `create-site` task will be available.
+
+> 💡 Confused about access keys? Check out the [Security](#security) section of this README.
 
 **Exception!** Because you want to use a naked/APEX domain you have to use Route53
 for DNS. (You can find more on this in the Appendix.) Try again with DNS enabled:
@@ -177,6 +179,16 @@ boot sync-bucket --help
 ```
 
 Also feel free to open issues to ask questions or suggest improvements.
+
+## Security
+
+Giving your AWS keys to some program and just letting it run with it is kind of frightening so this section is aimed at giving some comfort around that.
+
+- The `create-site` task will create a CloudFormation stack according to a template defined in [confetti-clj/cloudformation](https://github.com/confetti-clj/cloudformation).
+- If you want to see the CloudFormation template before you run anything you can pass the `--dry-run` argument.
+- The credentials you pass to `create-site` must have permissions to create the individual resources listed in the CloudFormation template. (In the future Confetti may provide an AWS permissions snippet so you can create a user that has all the rights Confetti needs.)
+- The CloudFormation template will also generate an Access Key + Secret. This keypair is restricted, it can only access the S3 Bucket and invalidate CloudFront caches.
+- The keypair should be sufficient to update your static site and restricted enough that you can share it with others.
 
 ## Changes
 
