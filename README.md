@@ -190,7 +190,7 @@ Giving your AWS keys to some program and just letting it run with it is kind of 
 - The CloudFormation template will also generate an Access Key + Secret. This keypair is restricted, it can only access the S3 Bucket and invalidate CloudFront caches.
 - The keypair should be sufficient to update your static site and restricted enough that you can share it with others.
 
-##### your-site.confetti.edn 
+#### :warning: your-site.confetti.edn 
 
 As of version `0.2.0` the `create-site` command will create a file
 ending in `.confetti.edn` this contains all information needed to
