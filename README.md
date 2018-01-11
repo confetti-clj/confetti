@@ -152,6 +152,8 @@ to the Cloudfront distribution.
 > registrar so it's recommended to check their individual
 > documentation.
 
+> :lock: Want SSL? [Here's how to enable it](https://github.com/confetti-clj/confetti#add-ssl).
+
 ### Adding Subdomains
 
 Let's say you used Confetti to create a site `weloveparens.com` and
