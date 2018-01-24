@@ -205,6 +205,10 @@ maintain your site. **The information in this file contains secrets!**
 
 ## Changes
 
+#### 0.2.1
+
+- Update various dependencies ([0b1a59decb](https://github.com/confetti-clj/confetti/commit/0b1a59decb0eabf50a9709c945d5a7c5a4e55be9))
+
 #### 0.2.0
 
 - Upgrade to `[confetti/cloudformation "0.1.6"]`, which brings the following improvements:
